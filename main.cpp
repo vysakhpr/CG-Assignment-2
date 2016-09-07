@@ -6,7 +6,12 @@
 #include <fstream>
 #include <new>
 
+int WINDOW_HEIGHT=1000;
+int WINDOW_WIDTH=1000;
+
 GLuint VBO,VAO,IBO;
+GLuint gWorldLocation;
+float Scale;
 const char* pVSFileName = "shader.vs";
 const char* pFSFileName = "shader.fs";
 const char* pGSFileName = "shader.gs";
@@ -91,11 +96,15 @@ static void CompileShaders() {
 	}
 
 	glUseProgram(ShaderProgram);
+	gWorldLocation=glGetUniformLocation(ShaderProgram,"gWorld");
+
 }
 
 static void InitializeDisplayCallbacks()
 {
 	glutDisplayFunc(RenderScene);
+	glutMouseFunc(onMousePress);
+	glutReshapeFunc(onReshape);
 }
 
 static void onInit(int argc, char ** argv)
@@ -115,7 +124,7 @@ int main(int argc, char**argv)
 {	
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
-	glutInitWindowSize(1024,768);
+	glutInitWindowSize(WINDOW_WIDTH,WINDOW_HEIGHT);
 	glutInitWindowPosition(100,100);
 	glutCreateWindow("Protein Viewer");
 	InitializeDisplayCallbacks();

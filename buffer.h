@@ -1,10 +1,15 @@
 OffModel *protein;
-
+struct BoundBox
+{
+	Vector3f Center;
+	float XWidth;
+	float YWidth;
+	float ZWidth;
+}boundBox;
 static void  CreateBuffers(char* OffFile)
 {
 	float maxBoundX=0,maxBoundY=0,maxBoundZ=0,minBoundX=0,minBoundY=0,minBoundZ=0;
 	float x,y,z;
-	float BoundCenter[3],Scale;
 	float dX,dY,dZ,BoundBoxWidth;
 	int i,j;
 	protein=readOffFile(OffFile);
@@ -58,18 +63,22 @@ static void  CreateBuffers(char* OffFile)
 	}
 	if(BoundBoxWidth==0)
 		BoundBoxWidth=1;
-	Scale = 1.0/BoundBoxWidth; 
-	BoundCenter[0]=Scale*(maxBoundX-(dX/2));
-	BoundCenter[1]=Scale*(maxBoundY-(dY/2));
-	BoundCenter[2]=Scale*(maxBoundZ-(dZ/2));
+	//Scale = 1.0/BoundBoxWidth; 
+	Scale=1;
+	boundBox.Center.x=Scale*(maxBoundX-(dX/2));
+	boundBox.Center.y=Scale*(maxBoundY-(dY/2));
+	boundBox.Center.z=Scale*(maxBoundZ-(dZ/2));
+	boundBox.XWidth=Scale*dX;
+	boundBox.YWidth=Scale*dY;
+	boundBox.ZWidth=Scale*dZ;
 	for (i = 0; i < protein->numberOfVertices; i++)
 	 {
 	 	(protein->vertices[i]).x*=Scale;
 	 	(protein->vertices[i]).y*=Scale;
 	 	(protein->vertices[i]).z*=Scale;
-	 	(protein->vertices[i]).x-=BoundCenter[0];
-	 	(protein->vertices[i]).y-=BoundCenter[1];
-	 	(protein->vertices[i]).z-=BoundCenter[2];
+	 	(protein->vertices[i]).x-=boundBox.Center.x;
+	 	(protein->vertices[i]).y-=boundBox.Center.y;
+	 	(protein->vertices[i]).z-=boundBox.Center.z;
 	 }
 	glGenBuffers(1,&VBO);
 	glBindBuffer(GL_ARRAY_BUFFER,VBO);
