@@ -16,6 +16,7 @@ const char* pVSFileName = "shader.vs";
 const char* pFSFileName = "shader.fs";
 const char* pGSFileName = "shader.gs";
 
+
 #include "helper.h"
 #include "buffer.h"
 #include "display_callbacks.h"
@@ -103,7 +104,9 @@ static void CompileShaders() {
 static void InitializeDisplayCallbacks()
 {
 	glutDisplayFunc(RenderScene);
+	glutIdleFunc(onIdle);
 	glutMouseFunc(onMousePress);
+	glutPassiveMotionFunc(onMouseMotion);
 	glutReshapeFunc(onReshape);
 }
 
@@ -134,6 +137,7 @@ int main(int argc, char**argv)
 		return 1;
 	}
 	onInit(argc,argv);
+	glutWarpPointer(WINDOW_WIDTH/2,WINDOW_HEIGHT/2);
 	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	glutMainLoop();
 	return(0);

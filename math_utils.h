@@ -1,3 +1,7 @@
+#ifndef MATH_UTILS_H
+#define MATH_UTILS_H
+
+
 /*
 
 	Copyright 2014 Etay Meiri
@@ -103,7 +107,6 @@ struct Vector3f {
 
 	Vector3f & Normalize() {
 		const float Length = sqrtf(x * x + y * y + z * z);
-
 		x /= Length;
 		y /= Length;
 		z /= Length;
@@ -515,3 +518,6 @@ public:
 		m[3][3] = 0.0;
 	}
 };
+ 
+
+#endif

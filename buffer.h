@@ -1,3 +1,7 @@
+#ifndef BUFFER_H
+#define BUFFER_H
+
+#include "math_utils.h"
 OffModel *protein;
 struct BoundBox
 {
@@ -107,3 +111,5 @@ static void  CreateBuffers(char* OffFile)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+#endif

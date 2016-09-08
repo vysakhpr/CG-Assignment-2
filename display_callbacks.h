@@ -1,12 +1,26 @@
-float ZoomFactor=45.0f;
+#ifndef DISPLAY_CALLBACKS_H
+#define DISPLAY_CALLBACKS_H
+
+
+
+#include "math_utils.h"
+#include "quaternion.h"
+#include "camera.h"
+
+Camera cam;
+
+
 
 static void RenderScene()
 {
-	Matrix4f WorldProj, PersProj, CameraTranslateTrans,CameraTrans;
-	CameraTranslateTrans.InitTranslationTransform(0,0,boundBox.ZWidth);
-	CameraTrans.InitCameraTransform(Vector3f(0,0,1),Vector3f(0,1,0));
-	PersProj.InitPersProjTransform(PersProjInfo(90-ZoomFactor,WINDOW_WIDTH,WINDOW_HEIGHT,Scale*1,Scale*100));
-	WorldProj=PersProj*CameraTrans*CameraTranslateTrans;
+
+	Matrix4f WorldProj, PersProj,CameraTrans;
+
+	CameraTrans=cam.RenderMatrix();
+
+	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,Scale*1,Scale*100));
+
+	WorldProj=PersProj*CameraTrans;
 
 	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldProj.m[0][0]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -22,6 +36,36 @@ static void RenderScene()
 	}
 }
 
+static void onIdle()
+{
+	glutPostRedisplay();
+}
+
+
+static void onMouseMotion(int x, int y)
+{
+	static int pre_mouse_x=WINDOW_WIDTH/2;
+	static int pre_mouse_y=WINDOW_HEIGHT/2;
+	int dx=x - pre_mouse_x;
+	int dy=y- pre_mouse_y;
+	pre_mouse_x=x;
+	pre_mouse_y=y;
+	cam.SetAngles(dx,dy,x,y);
+	glutPostRedisplay();
+}
+
+static void onMousePress(int button, int state, int x, int y)
+{
+	if(button==3 && cam.FieldOfView() != 1)
+	{
+		cam.ZoomIn();
+	}
+	else if(button==4 && cam.FieldOfView() != 179)
+	{
+		cam.ZoomOut();
+	}
+	glutPostRedisplay();
+}
 
 static void onReshape(int width, int height) 
 {
@@ -30,15 +74,5 @@ static void onReshape(int width, int height)
 	WINDOW_HEIGHT = height;
 }
 
-static void onMousePress(int button, int state, int x, int y)
-{
-	if(button==3 && ZoomFactor != 89)
-	{
-		ZoomFactor+=1;
-	}
-	else if(button==4 && ZoomFactor != -89)
-	{
-		ZoomFactor-=1;
-	}
-	glutPostRedisplay();
-}
+
+#endif

@@ -1,3 +1,8 @@
+#ifndef HELPER_H
+#define HELPER_H
+
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -364,3 +369,6 @@ void UnitCylinder(int slices, int stacks){
 }
 
 /* Generate unit sphere and unit cylinder -- end */
+
+
+#endif
