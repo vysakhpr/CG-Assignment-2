@@ -74,5 +74,15 @@ static void onReshape(int width, int height)
 	WINDOW_HEIGHT = height;
 }
 
+static void onKeyPress(unsigned char key, int x, int y)
+{
+	switch(key)
+	{
+		case 'l':
+		case 'L': cam.ToggleLock();	break;
+		case 'r':
+		case 'R': cam.ResetCamera();break;
+	}
+}
 
 #endif

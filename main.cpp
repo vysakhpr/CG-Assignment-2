@@ -108,6 +108,7 @@ static void InitializeDisplayCallbacks()
 	glutMouseFunc(onMousePress);
 	glutPassiveMotionFunc(onMouseMotion);
 	glutReshapeFunc(onReshape);
+	glutKeyboardFunc(onKeyPress);
 }
 
 static void onInit(int argc, char ** argv)

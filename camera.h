@@ -16,10 +16,14 @@ class Camera
     bool OnLowerEdge;
     bool OnLeftEdge;
     bool OnRightEdge;
+
+    bool Locked;
 	
 public:
-	Camera()
+
+	void ResetCamera()
 	{
+		Locked = false;
 		ZoomFactor=45.0;
 		Target=Vector3f(0,0,1);
 		Up=Vector3f(0,1,0);
@@ -46,6 +50,27 @@ public:
     			PanHorizontalAngle=90.0f+ToDegree(asin(-HTarget.z));	
     	}
     	PanVerticalAngle=-ToDegree(asin(Target.y));
+	}
+
+
+	Camera()
+	{
+		ResetCamera();
+	}
+	
+	void LockCamera()
+	{
+		Locked=true;
+	}
+
+	void UnlockCamera()
+	{
+		Locked=false;
+	}
+
+	void ToggleLock()
+	{
+		Locked=!Locked;
 	}
 	
 	void RotateCamera()
@@ -74,13 +99,19 @@ public:
 	Matrix4f RenderMatrix()
 	{
 		Matrix4f CameraTranslateTrans,CameraTrans;
-		CheckEdges();
 		CameraTranslateTrans.InitTranslationTransform(0,0,boundBox.ZWidth);
-		CameraTrans.InitCameraTransform(Target,Up);
-		return CameraTrans*CameraTranslateTrans;
+		//if(!Locked)
+		//{
+			CheckEdges();
+			CameraTrans.InitCameraTransform(Target,Up);
+			return CameraTrans*CameraTranslateTrans;
+		//}
+		return CameraTranslateTrans;
 	}
 
 	void CheckEdges(){
+		if(Locked)
+			return;
 		bool ShouldRotate = false;
 	    if (OnLeftEdge) 
 	    {
@@ -131,6 +162,8 @@ public:
 	void SetAngles(int dx,int dy,int x,int y)
 	{	
 		int MARGIN=100;
+		if(Locked)
+			return;
 		PanHorizontalAngle+=(float)dx/20;
 		PanVerticalAngle+=(float)dy/20;
 		if(dx == 0)
