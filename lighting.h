@@ -23,9 +23,6 @@ public:
 		DLight.DiffuseIntensity=0.75f;
 	}
 
-
-
-
 	void SetDirectionalLightColor(Vector3f c)
 	{
 		DLight.Color=c;

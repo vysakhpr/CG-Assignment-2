@@ -3,6 +3,7 @@
 
 GLuint VBO,VAO,IBO;
 GLuint gWorldLocation,gWVPLocation,DLightColorLocation,DLightAmbientIntensityLocation,DLightDirectionLocation,DLightDiffuseIntensityLocation;
+GLuint gEyeWorldPositionLocation,SpecularIntensityLocation,SpecularPowerLocation;
 
 static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType) {
 	GLuint ShaderObj = glCreateShader(ShaderType);
@@ -84,9 +85,13 @@ static void CompileShaders() {
 	DLightAmbientIntensityLocation=glGetUniformLocation(ShaderProgram,"gDirectionalLight.AmbientIntensity");
 	DLightDirectionLocation=glGetUniformLocation(ShaderProgram,"gDirectionalLight.Direction");
 	DLightDiffuseIntensityLocation=glGetUniformLocation(ShaderProgram,"gDirectionalLight.DiffuseIntensity");
+	gEyeWorldPositionLocation=glGetUniformLocation(ShaderProgram,"gEyeWorldPosition");
+	SpecularIntensityLocation=glGetUniformLocation(ShaderProgram,"gSpecularIntensity");
+	SpecularPowerLocation=glGetUniformLocation(ShaderProgram,"gSpecularPower");
 	if(	gWVPLocation==0xFFFFFFFF || gWorldLocation==0xFFFFFFFF || DLightColorLocation==0xFFFFFFFF ||
 		DLightAmbientIntensityLocation==0xFFFFFFFF || DLightDirectionLocation == 0xFFFFFFFF ||
-		DLightDiffuseIntensityLocation == 0xFFFFFFFF)
+		DLightDiffuseIntensityLocation == 0xFFFFFFFF || gEyeWorldPositionLocation == 0xFFFFFFFF ||
+		SpecularIntensityLocation == 0xFFFFFFFF || SpecularPowerLocation == 0xFFFFFFFF )
 	{
 		cout<<"Location Cannot be found"<<endl;
 		exit(1);

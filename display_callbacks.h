@@ -2,7 +2,6 @@
 #define DISPLAY_CALLBACKS_H
 
 
-
 #include "math_utils.h"
 #include "shader.h"
 #include "quaternion.h"
@@ -34,6 +33,9 @@ static void RenderScene()
     Direction.Normalize();
     glUniform3f(DLightDirectionLocation,Direction.x,Direction.y,Direction.z);
     glUniform1f(DLightDiffuseIntensityLocation,DLight.DiffuseIntensity);
+    glUniform3f(gEyeWorldPositionLocation,0,0,-boundBox.ZWidth);
+    glUniform1f(SpecularIntensityLocation,1.0f);
+    glUniform1f(SpecularPowerLocation,16);
 
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
