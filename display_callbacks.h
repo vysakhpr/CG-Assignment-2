@@ -4,34 +4,48 @@
 
 
 #include "math_utils.h"
+#include "shader.h"
 #include "quaternion.h"
 #include "camera.h"
 #include "trackball.h"
+#include "lighting.h"
 
 Camera cam;
 TrackBall track;
+Lighting lights;
 
 
 static void RenderScene()
 {
 
-	Matrix4f WorldProj, PersProj,CameraTrans, TrackballTrans;
-
+	Matrix4f WorldProj, PersProj,CameraTrans, TrackballTrans, WorldTrans;
 	TrackballTrans=track.RenderMatrix();
-
 	CameraTrans=cam.RenderMatrix();
-
 	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,Scale*1,Scale*100));
+	WorldTrans=TrackballTrans;
+	WorldProj=PersProj*CameraTrans*WorldTrans;
+	glUniformMatrix4fv(gWVPLocation,1,GL_TRUE,&WorldProj.m[0][0]);
+	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldTrans.m[0][0]);
 
-	WorldProj=PersProj*CameraTrans*TrackballTrans;
+	DirectionalLight DLight=lights.GetDirectionalLight();
+	glUniform3f(DLightColorLocation, DLight.Color.x, DLight.Color.y, DLight.Color.z);
+    glUniform1f(DLightAmbientIntensityLocation, DLight.AmbientIntensity);
+    Vector3f Direction=DLight.Direction;
+    Direction.Normalize();
+    glUniform3f(DLightDirectionLocation,Direction.x,Direction.y,Direction.z);
+    glUniform1f(DLightDiffuseIntensityLocation,DLight.DiffuseIntensity);
 
-	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldProj.m[0][0]);
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 	glDrawElements(GL_TRIANGLES,protein->numberOfTriangles*3,GL_UNSIGNED_INT,0);
 	glBindVertexArray(0);
 	GLenum errorCode = glGetError();
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(0);
 	if (errorCode == GL_NO_ERROR) {
 		glutSwapBuffers();
 	} else {
@@ -95,9 +109,14 @@ static void onKeyPress(unsigned char key, int x, int y)
 	switch(key)
 	{
 		case 'l':
-		case 'L': cam.ToggleLock();	break;
+		case 'L': 	cam.ToggleLock();	break;
 		case 'r':
-		case 'R': cam.ResetCamera();track.ResetTrackBall();break;
+		case 'R': 	cam.ResetCamera();track.ResetTrackBall();break;
+		case 'a':
+		case 'A':	lights.SwitchDirectionalLightOn();break;
+		case 'z':
+		case 'Z':	lights.SwitchDirectionalLightOff();break;
+		default: exit(1);
 	}
 }
 

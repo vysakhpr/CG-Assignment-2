@@ -139,6 +139,7 @@ int FreeMolecule(Molecule *mol)
 /* Handling OFF file -- Start */
 typedef struct Vt {
 	float x,y,z;
+	Vector3f Normal;
 }Vertex;
 
 typedef struct Tri {
@@ -194,6 +195,7 @@ OffModel* readOffFile(char * OffFile) {
 		(model->vertices[i]).x = x;
 		(model->vertices[i]).y = y;
 		(model->vertices[i]).z = z;
+		(model->vertices[i]).Normal=Vector3f(0.0,0.0,0.0);
 	}
 
 	/* Read the Triangles */	
@@ -215,17 +217,9 @@ OffModel* readOffFile(char * OffFile) {
 
 int FreeOffModel(OffModel *model)
 {
-	int i;
 	if( model == NULL )
 		return 0;
 	free(model->vertices);
-	for( i = 0; i < model->numberOfTriangles; ++i )
-	{
-		if( (model->triangles[i]).v )
-		{
-			free((model->triangles[i]).v);
-		}
-	}
 	free(model->triangles);
 	free(model);
 	return 1;
