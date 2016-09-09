@@ -1,15 +1,14 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef TRACKBALL_H
+#define TRACKBALL_H
 
 
 #include "quaternion.h"
 #include "math_utils.h"
 
-class Camera
+class TrackBall
 {
 	Vector3f Target;
 	Vector3f Up;
-	float ZoomFactor;
 	float PanHorizontalAngle;
 	float PanVerticalAngle;
 	bool OnUpperEdge;
@@ -17,14 +16,11 @@ class Camera
     bool OnLeftEdge;
     bool OnRightEdge;
 
-    bool Locked;
 	
 public:
 
-	void ResetCamera()
+	void ResetTrackBall()
 	{
-		Locked = false;
-		ZoomFactor=45.0;
 		Target=Vector3f(0,0,1);
 		Up=Vector3f(0,1,0);
 		OnUpperEdge = false;
@@ -53,27 +49,13 @@ public:
 	}
 
 
-	Camera()
+	TrackBall()
 	{
-		ResetCamera();
+		ResetTrackBall();
 	}
 	
-	void LockCamera()
-	{
-		Locked=true;
-	}
-
-	void UnlockCamera()
-	{
-		Locked=false;
-	}
-
-	void ToggleLock()
-	{
-		Locked=!Locked;
-	}
 	
-	void RotateCamera()
+	void RotateTrackBall()
 	{
 		Vector3f Vaxis=Vector3f(0,1,0);
 		Vector3f View=Vector3f(1,0,0);
@@ -98,70 +80,48 @@ public:
 	
 	Matrix4f RenderMatrix()
 	{
-		Matrix4f CameraTranslateTrans,CameraTrans;
-		CameraTranslateTrans.InitTranslationTransform(0,0,boundBox.ZWidth);
+		Matrix4f TrackBallTransH,TrackBallTransV;
 		CheckEdges();
-		CameraTrans.InitCameraTransform(Target,Up);
-		return CameraTrans*CameraTranslateTrans;
+		TrackBallTransH.InitAxisRotateTransform(Up,PanHorizontalAngle);
+		TrackBallTransV.InitAxisRotateTransform(Up.Cross(Target),PanVerticalAngle);
+		//TrackBallTrans.InitCameraTransform(Target,Up);
+		return TrackBallTransH*TrackBallTransV;
 	}
 
 	void CheckEdges(){
-		if(Locked)
-			return;
 		bool ShouldRotate = false;
 	    if (OnLeftEdge) 
 	    {
-        	PanHorizontalAngle -= 0.1f;
+        	PanHorizontalAngle += 0.01f;
         	ShouldRotate = true;
     	}
     	else if (OnRightEdge) 
     	{
-        	PanHorizontalAngle += 0.1f;
+        	PanHorizontalAngle -= 0.01f;
         	ShouldRotate = true;
     	}
     	if (OnUpperEdge) 
     	{
-        	if (PanVerticalAngle > -90.0f) 
-        	{
-            	PanVerticalAngle -= 0.1f;
+            	PanVerticalAngle += 0.01f;
             	ShouldRotate = true;
-        	}
     	}
     	else if (OnLowerEdge) 
     	{
-        	if (PanVerticalAngle < 90.0f) 
-        	{
-            	PanVerticalAngle += 0.1f;
+            	PanVerticalAngle -= 0.01f;
             	ShouldRotate = true;
-        	}
     	}
+
     	if (ShouldRotate) 
     	{
-        	RotateCamera();
+        	RotateTrackBall();
     	}
-	}
-	void ZoomIn()
-	{
-		ZoomFactor+=1;
-	}
-
-	void ZoomOut()
-	{
-		ZoomFactor-=1;
-	}
-
-	float FieldOfView()
-	{
-		return (90-ZoomFactor);
 	}
 
 	void SetAngles(int dx,int dy,int x,int y)
 	{	
-		int MARGIN=100;
-		if(Locked)
-			return;
-		PanHorizontalAngle+=(float)dx/20;
-		PanVerticalAngle+=(float)dy/20;
+		int MARGIN=50;
+		PanHorizontalAngle+=(float)+2*dx/WINDOW_WIDTH;
+		PanVerticalAngle+=(float)+2*dy/WINDOW_HEIGHT;
 		if(dx == 0)
 		{
 			if(x<=MARGIN)
@@ -186,7 +146,7 @@ public:
 			OnUpperEdge=false;
 			OnLowerEdge=false;
 		}
-		RotateCamera();
+		RotateTrackBall();
 	}
 
 };

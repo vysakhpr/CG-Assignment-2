@@ -106,7 +106,8 @@ static void InitializeDisplayCallbacks()
 	glutDisplayFunc(RenderScene);
 	glutIdleFunc(onIdle);
 	glutMouseFunc(onMousePress);
-	glutPassiveMotionFunc(onMouseMotion);
+	glutPassiveMotionFunc(onPassiveMouseMotion);
+	glutMotionFunc(onActiveMouseMotion);
 	glutReshapeFunc(onReshape);
 	glutKeyboardFunc(onKeyPress);
 }

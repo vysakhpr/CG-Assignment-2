@@ -6,21 +6,24 @@
 #include "math_utils.h"
 #include "quaternion.h"
 #include "camera.h"
+#include "trackball.h"
 
 Camera cam;
-
+TrackBall track;
 
 
 static void RenderScene()
 {
 
-	Matrix4f WorldProj, PersProj,CameraTrans;
+	Matrix4f WorldProj, PersProj,CameraTrans, TrackballTrans;
+
+	TrackballTrans=track.RenderMatrix();
 
 	CameraTrans=cam.RenderMatrix();
 
 	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,Scale*1,Scale*100));
 
-	WorldProj=PersProj*CameraTrans;
+	WorldProj=PersProj*CameraTrans*TrackballTrans;
 
 	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldProj.m[0][0]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -42,7 +45,7 @@ static void onIdle()
 }
 
 
-static void onMouseMotion(int x, int y)
+static void onPassiveMouseMotion(int x, int y)
 {
 	static int pre_mouse_x=WINDOW_WIDTH/2;
 	static int pre_mouse_y=WINDOW_HEIGHT/2;
@@ -53,6 +56,19 @@ static void onMouseMotion(int x, int y)
 	cam.SetAngles(dx,dy,x,y);
 	glutPostRedisplay();
 }
+
+static void onActiveMouseMotion(int x, int y)
+{
+	static int pre_x=WINDOW_WIDTH/2;
+	static int pre_y=WINDOW_HEIGHT/2;
+	int dx=x - pre_x;
+	int dy=y- pre_y;
+	pre_x=x;
+	pre_y=y;
+	track.SetAngles(-dx,-dy,x,y);
+	glutPostRedisplay();
+}
+
 
 static void onMousePress(int button, int state, int x, int y)
 {
@@ -81,7 +97,7 @@ static void onKeyPress(unsigned char key, int x, int y)
 		case 'l':
 		case 'L': cam.ToggleLock();	break;
 		case 'r':
-		case 'R': cam.ResetCamera();break;
+		case 'R': cam.ResetCamera();track.ResetTrackBall();break;
 	}
 }
 
