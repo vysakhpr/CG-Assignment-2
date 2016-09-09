@@ -104,11 +104,16 @@ static void  CreateBuffers(char* OffFile)
 	 	Vector3f v2=Vector3f((protein->vertices[Indices[j+2]]).x,(protein->vertices[Indices[j+2]]).y,(protein->vertices[Indices[j+2]]).z);
 	 	Vector3f v10=v1-v0;
 	 	Vector3f v20=v2-v0;
+	 	Vector3f v21=v2-v1;
 	 	Vector3f Normal=v10.Cross(v20);
+	 	float Area= Normal.length()/2;
+	 	v10.Normalize();
+	 	v20.Normalize();
+	 	v21.Normalize();
 	 	Normal.Normalize();
-	 	(protein->vertices[Indices[j]]).Normal+=Normal;
-	 	(protein->vertices[Indices[j+1]]).Normal+=Normal;
-	 	(protein->vertices[Indices[j+1]]).Normal+=Normal;
+	 	(protein->vertices[Indices[j]]).Normal+=Normal*Area*ToDegree(acos(v10.Dot(v20)));
+	 	(protein->vertices[Indices[j+1]]).Normal+=Normal*Area*ToDegree(acos((v10*-1.0).Dot(v21)));
+	 	(protein->vertices[Indices[j+1]]).Normal+=Normal*Area*ToDegree(acos((v20*-1.0).Dot((v21*-1.0))));
 	}
 
 	for (i = 0; i < protein->numberOfVertices; i++)

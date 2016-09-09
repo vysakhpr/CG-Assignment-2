@@ -97,6 +97,10 @@ struct Vector3f {
 		return &(x);
 	}
 
+	float Dot(const Vector3f& v) const {
+		return (x*v.x+y*v.y+z*v.z);
+	}
+
 	Vector3f Cross(const Vector3f& v) const {
 		const float _x = y * v.z - z * v.y;
 		const float _y = z * v.x - x * v.z;
