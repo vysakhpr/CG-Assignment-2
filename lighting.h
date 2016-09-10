@@ -11,9 +11,25 @@ struct DirectionalLight
 	float DiffuseIntensity;
 };
 
+struct PositionalLight
+{	
+	Vector3f Color;
+	Vector3f Position;
+	float AmbientIntensity;
+	float DiffuseIntensity;
+	struct 
+	{
+		float Constant;
+		float Linear;
+		float Exponential;
+	}Attenuation;
+};
+
 class Lighting
 {
 	DirectionalLight DLight;
+	PositionalLight PLight;
+	int DLightFlag,PLightFlag;
 public:
 	Lighting()
 	{
@@ -21,6 +37,15 @@ public:
 		DLight.AmbientIntensity=0.1f;
 		DLight.Direction=Vector3f(1.0,0.0,0.0);
 		DLight.DiffuseIntensity=0.75f;
+		PLight.Color=Vector3f(1.0,1.0,1.0);
+		PLight.Position=Vector3f(0.0,0.0,0.0);
+		PLight.AmbientIntensity=0.0f;
+		PLight.DiffuseIntensity=0.4f;
+		PLight.Attenuation.Constant=1.0f;
+		PLight.Attenuation.Linear=0.1f;
+		PLight.Attenuation.Exponential=0.001f;
+		DLightFlag=1;
+		PLightFlag=1;
 	}
 
 	void SetDirectionalLightColor(Vector3f c)
@@ -33,7 +58,24 @@ public:
 	}
 	DirectionalLight GetDirectionalLight()
 	{
-		return DLight;
+		DirectionalLight Light=DLight;
+		Light.AmbientIntensity*=DLightFlag;
+		Light.DiffuseIntensity*=DLightFlag;
+		Light.Color*=DLightFlag;
+		return Light;
+	}
+
+	void SetPositionalLightPosition(Vector3f c)
+	{
+		PLight.Position=c;
+	}
+	PositionalLight GetPositionalLight()
+	{
+		PositionalLight Light=PLight;
+		Light.AmbientIntensity*=PLightFlag;
+		Light.DiffuseIntensity*=PLightFlag;
+		Light.Color*=PLightFlag;
+		return Light;
 	}
 	void IncreaseDirectionalLightAmbientIntensity()
 	{
@@ -61,6 +103,16 @@ public:
 	{
 		DLight.AmbientIntensity=0.0f;
 		DLight.DiffuseIntensity=0.0f;
+	}
+
+	void ToggleDirectionalLightSwitch()
+	{
+		DLightFlag=!(DLightFlag);
+	}
+
+	void TogglePositionalLightSwitch()
+	{
+		PLightFlag=!(PLightFlag);
 	}
 
 

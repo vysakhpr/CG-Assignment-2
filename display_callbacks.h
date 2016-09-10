@@ -17,6 +17,8 @@ Lighting lights;
 static void RenderScene()
 {
 
+	lights.SetPositionalLightPosition(Vector3f(boundBox.XWidth/2,boundBox.YWidth/2,-boundBox.ZWidth/2));
+
 	Matrix4f WorldProj, PersProj,CameraTrans, TrackballTrans, WorldTrans;
 	TrackballTrans=track.RenderMatrix();
 	CameraTrans=cam.RenderMatrix();
@@ -35,7 +37,15 @@ static void RenderScene()
     glUniform1f(DLightDiffuseIntensityLocation,DLight.DiffuseIntensity);
     glUniform3f(gEyeWorldPositionLocation,0,0,-boundBox.ZWidth);
     glUniform1f(SpecularIntensityLocation,1.0f);
-    glUniform1f(SpecularPowerLocation,16);
+    glUniform1f(SpecularPowerLocation,32);
+    PositionalLight PLight=lights.GetPositionalLight();
+    glUniform3f(PLightColorLocation,PLight.Color.x,PLight.Color.y,PLight.Color.z);
+    glUniform3f(PLightPositionLocation,PLight.Position.x,PLight.Position.y,PLight.Position.z);
+    glUniform1f(PLightDiffuseIntensityLocation,PLight.DiffuseIntensity);
+    glUniform1f(PLightAmbientIntensityLocation, PLight.AmbientIntensity);
+    glUniform1f(PLightAttenuationConstantLocation,PLight.Attenuation.Constant);
+    glUniform1f(PLightAttenuationLinearLocation,PLight.Attenuation.Linear);
+    glUniform1f(PLightAttenuationExpLocation,PLight.Attenuation.Exponential);
 
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -115,9 +125,9 @@ static void onKeyPress(unsigned char key, int x, int y)
 		case 'r':
 		case 'R': 	cam.ResetCamera();track.ResetTrackBall();break;
 		case 'a':
-		case 'A':	lights.SwitchDirectionalLightOn();break;
+		case 'A':	lights.ToggleDirectionalLightSwitch();break;
 		case 'z':
-		case 'Z':	lights.SwitchDirectionalLightOff();break;
+		case 'Z':	lights.TogglePositionalLightSwitch();break;
 		default: exit(1);
 	}
 }

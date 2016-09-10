@@ -4,6 +4,8 @@
 GLuint VBO,VAO,IBO;
 GLuint gWorldLocation,gWVPLocation,DLightColorLocation,DLightAmbientIntensityLocation,DLightDirectionLocation,DLightDiffuseIntensityLocation;
 GLuint gEyeWorldPositionLocation,SpecularIntensityLocation,SpecularPowerLocation;
+GLuint PLightColorLocation, PLightAmbientIntensityLocation, PLightDiffuseIntensityLocation, PLightPositionLocation;
+GLuint PLightAttenuationConstantLocation,PLightAttenuationLinearLocation,PLightAttenuationExpLocation;
 
 static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType) {
 	GLuint ShaderObj = glCreateShader(ShaderType);
@@ -88,10 +90,20 @@ static void CompileShaders() {
 	gEyeWorldPositionLocation=glGetUniformLocation(ShaderProgram,"gEyeWorldPosition");
 	SpecularIntensityLocation=glGetUniformLocation(ShaderProgram,"gSpecularIntensity");
 	SpecularPowerLocation=glGetUniformLocation(ShaderProgram,"gSpecularPower");
+	PLightPositionLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Position");
+	PLightColorLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Color");
+	PLightAmbientIntensityLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.AmbientIntensity");
+	PLightDiffuseIntensityLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.DiffuseIntensity");
+	PLightAttenuationConstantLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Attenuation.Constant");
+	PLightAttenuationLinearLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Attenuation.Linear");
+	PLightAttenuationExpLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Attenuation.Exponential");
 	if(	gWVPLocation==0xFFFFFFFF || gWorldLocation==0xFFFFFFFF || DLightColorLocation==0xFFFFFFFF ||
 		DLightAmbientIntensityLocation==0xFFFFFFFF || DLightDirectionLocation == 0xFFFFFFFF ||
 		DLightDiffuseIntensityLocation == 0xFFFFFFFF || gEyeWorldPositionLocation == 0xFFFFFFFF ||
-		SpecularIntensityLocation == 0xFFFFFFFF || SpecularPowerLocation == 0xFFFFFFFF )
+		SpecularIntensityLocation == 0xFFFFFFFF || SpecularPowerLocation == 0xFFFFFFFF || PLightColorLocation == 0xFFFFFFFF ||
+		PLightPositionLocation == 0xFFFFFFFF || PLightAmbientIntensityLocation == 0xFFFFFFFF || PLightDiffuseIntensityLocation 
+		 == 0xFFFFFFFF || PLightAttenuationConstantLocation == 0xFFFFFFFF || PLightAttenuationLinearLocation == 0xFFFFFFFF || 
+		 PLightAttenuationExpLocation == 0xFFFFFFFF)
 	{
 		cout<<"Location Cannot be found"<<endl;
 		exit(1);
