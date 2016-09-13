@@ -15,12 +15,15 @@ public:
 	GLuint *sphereIndices,*IndexSpheres;
 	int numSphereVerts,numVertexSpheres;
 	int numSphereTris,numVertexTriangles;
-	Vector3f *cylinVerts;
-	Vector3f *cylinNormals;
-	GLuint *cylinIndices;
+	Vector3f *cylinVerts,*VertexCylinders;
+	Vector3f *cylinNormals,*NormalsCylinders;
+	GLuint *cylinIndices,*IndexCylinders;
 	int numCylinVerts;
 	int numCylinTris;
-	GLuint SPH_VBO, SPH_NORM_VBO, SPH_IBO, VAO,CYL_VBO, CYL_NORM_VBO,CYL_IBO;;
+	int TotalSphereVertex,TotalCylinderVertex;
+	int TotalSphereIndex,TotalCylinderIndex;
+		
+	GLuint SPH_VBO, SPH_NORM_VBO, SPH_IBO, VAO,CYL_VBO, CYL_NORM_VBO,CYL_IBO;
 
 
 	LigandMolecule()
@@ -45,73 +48,152 @@ public:
 		slices=80;
 		stacks=80;
 		ligand=readCrdFile(crdFile);
+		TotalSphereVertex=ligand->numAtoms*(slices * (stacks-1) + 2);
+		TotalSphereIndex=ligand->numAtoms*((slices * (stacks-2) * 2 + 2 * slices)*3);
+		VertexSpheres=new Vector3f[TotalSphereVertex];
+		NormalsSpheres=new Vector3f[TotalSphereVertex];
+		IndexSpheres=new GLuint[TotalSphereIndex];
+		for(int k=0;k<ligand->numAtoms;k++){
+
+			UnitSphere(slices,stacks);
+
+			for(i=0;i<numSphereVerts;i++)
+			{
+				sphereVerts[i].x*=0.2*atomic_radii[(ligand->atoms[k]).type-1];
+				sphereVerts[i].y*=0.2*atomic_radii[(ligand->atoms[k]).type-1];
+				sphereVerts[i].z*=0.2*atomic_radii[(ligand->atoms[k]).type-1];
+				sphereVerts[i].x+=ligand->atoms[k].x;
+				sphereVerts[i].y+=ligand->atoms[k].y;
+				sphereVerts[i].z+=ligand->atoms[k].z;
+			}
+
+			for (i = 0; i < numSphereVerts; ++i)
+			{
+				sphereNormals[i]=Vector3f(0.0,0.0,0.0);
+			}
+
+			for (i = 0; i < numSphereTris*3; i+=3)
+			{
+				Vector3f v0=Vector3f(sphereVerts[sphereIndices[i]].x,sphereVerts[sphereIndices[i]].y,sphereVerts[sphereIndices[i]].z);
+		 		Vector3f v1=Vector3f(sphereVerts[sphereIndices[i+1]].x,sphereVerts[sphereIndices[i+1]].y,sphereVerts[sphereIndices[i+1]].z);
+		 		Vector3f v2=Vector3f(sphereVerts[sphereIndices[i+2]].x,sphereVerts[sphereIndices[i+2]].y,sphereVerts[sphereIndices[i+2]].z);
+	 			Vector3f v10=v1-v0;
+		 		Vector3f v20=v2-v0;
+		 		Vector3f v21=v2-v1;
+	 			Vector3f Normal=v10.Cross(v20);
+		 		float Area= Normal.length()/2;
+		 		v10.Normalize();
+	 			v20.Normalize();
+		 		v21.Normalize();
+		 		Normal.Normalize();
+	 			sphereNormals[sphereIndices[i]]+=Normal*Area*ToDegree(acos(v10.Dot(v20)));
+	 			sphereNormals[sphereIndices[i+1]]+=Normal*Area*ToDegree(acos((v10*-1.0).Dot(v21)));
+	 			sphereNormals[sphereIndices[i+2]]+=Normal*Area*ToDegree(acos((v20*-1.0).Dot((v21*-1.0))));
+			}
+			for (i = 0; i < numSphereVerts; ++i)
+			{
+				sphereNormals[i].Normalize();
+			}
 
 
-		UnitSphere(slices,stacks);
-		UnitCylinder(slices,stacks);
+			for (i = 0; i < numSphereVerts; ++i)
+			{
+				VertexSpheres[k*numSphereVerts+i]=sphereVerts[i];
+				NormalsSpheres[k*numSphereVerts+i]=sphereNormals[i];
+			}
 
-		for (i = 0; i < numSphereVerts; ++i)
-		{
-			sphereNormals[i]=Vector3f(0.0,0.0,0.0);
-		}
+			for (i = 0; i < numSphereTris*3; ++i)
+			{
+				IndexSpheres[k*numSphereTris*3+i]=k*numSphereVerts+sphereIndices[i];
+			}
 
-		for (i = 0; i < numSphereTris*3; i+=3)
-		{
-			Vector3f v0=Vector3f(sphereVerts[sphereIndices[i]].x,sphereVerts[sphereIndices[i]].y,sphereVerts[sphereIndices[i]].z);
-	 		Vector3f v1=Vector3f(sphereVerts[sphereIndices[i+1]].x,sphereVerts[sphereIndices[i+1]].y,sphereVerts[sphereIndices[i+1]].z);
-	 		Vector3f v2=Vector3f(sphereVerts[sphereIndices[i+2]].x,sphereVerts[sphereIndices[i+2]].y,sphereVerts[sphereIndices[i+2]].z);
-	 		Vector3f v10=v1-v0;
-	 		Vector3f v20=v2-v0;
-	 		Vector3f v21=v2-v1;
-	 		Vector3f Normal=v10.Cross(v20);
-	 		float Area= Normal.length()/2;
-	 		v10.Normalize();
-	 		v20.Normalize();
-	 		v21.Normalize();
-	 		Normal.Normalize();
-	 		sphereNormals[sphereIndices[i]]+=Normal*Area*ToDegree(acos(v10.Dot(v20)));
-	 		sphereNormals[sphereIndices[i+1]]+=Normal*Area*ToDegree(acos((v10*-1.0).Dot(v21)));
-	 		sphereNormals[sphereIndices[i+2]]+=Normal*Area*ToDegree(acos((v20*-1.0).Dot((v21*-1.0))));
-		}
-		for (i = 0; i < numSphereVerts; ++i)
-		{
-			sphereNormals[i].Normalize();
+
 		}
 
 		
+
+		
+		TotalCylinderVertex=ligand->numBonds*(slices * 2);
+		TotalCylinderIndex=ligand->numBonds*((slices * 2)*3);
+		VertexCylinders=new Vector3f[TotalCylinderVertex];
+		NormalsCylinders=new Vector3f[TotalCylinderVertex];
+		IndexCylinders=new GLuint[TotalCylinderIndex];
+		
+		
+		for(int k=0;k<ligand->numBonds;k++)
+		{
+			
+			Atom atom1=ligand->atoms[ligand->bonds[k].atom1];
+			Atom atom2=ligand->atoms[ligand->bonds[k].atom2];
+			UnitCylinder(slices,stacks);
+
+
+			for (i = 0; i < numCylinVerts; i+=2)
+			{
+				cylinVerts[i].x+=atom1.x;
+				cylinVerts[i].y+=atom1.y;
+				cylinVerts[i].z+=atom1.z;
+				cylinVerts[i+1].x+=atom2.x;
+				cylinVerts[i+1].y+=atom2.y;
+				cylinVerts[i+1].z+=atom2.z-1;
+				
+			}
+
+			for (i = 0; i < numCylinVerts; ++i)
+			{
+				cylinNormals[i].Normalize();
+			}
+			for (i = 0; i < numCylinVerts; ++i)
+			{
+				VertexCylinders[k*numCylinVerts+i]=cylinVerts[i];
+				NormalsCylinders[k*numCylinVerts+i]=cylinNormals[i];
+			}
+
+			for (i = 0; i < numCylinTris*3; ++i)
+			{
+				IndexCylinders[k*numCylinTris*3+i]=k*numCylinVerts+cylinIndices[i];
+			}
+		}
+		
+		for (i = 0; i < TotalSphereVertex; ++i)
+		{
+			Vector3f TranslateCoordinates=Vector3f(ligand->srcCoords[0],ligand->srcCoords[1],ligand->srcCoords[2]);
+			Vector3f Distance= TranslateCoordinates-VertexSpheres[i];
+			VertexSpheres[i]+=Distance*0.9;
+		}
+
+		for (i = 0; i < TotalCylinderVertex; ++i)
+		{
+			Vector3f TranslateCoordinates=Vector3f(ligand->srcCoords[0],ligand->srcCoords[1],ligand->srcCoords[2]);
+			Vector3f Distance= TranslateCoordinates- VertexCylinders[i];
+			VertexCylinders[i]+=Distance*0.9;
+		}
 
 		glBindVertexArray(VAO);
 		glGenBuffers(1,&SPH_IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,SPH_IBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*(numSphereTris)*3, sphereIndices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*TotalSphereIndex, IndexSpheres, GL_STATIC_DRAW);
 		glGenBuffers(1,&SPH_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,SPH_VBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(numSphereVerts), sphereVerts, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(TotalSphereVertex), VertexSpheres, GL_STATIC_DRAW);
 		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 		glGenBuffers(1,&SPH_NORM_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,SPH_NORM_VBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(Vector3f)*(numSphereVerts), sphereNormals, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(Vector3f)*(TotalSphereVertex), NormalsSpheres, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, SPH_NORM_VBO);
 		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 
-		
 
-		
-		for (i = 0; i < numCylinVerts; ++i)
-		{
-			cylinNormals[i].Normalize();
-		}
-		
 		glGenBuffers(1,&CYL_IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,CYL_IBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*(numCylinTris)*3, cylinIndices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*(TotalCylinderIndex), IndexCylinders, GL_STATIC_DRAW);
 		glGenBuffers(1,&CYL_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,CYL_VBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(numCylinVerts), cylinVerts, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(TotalCylinderVertex), VertexCylinders, GL_STATIC_DRAW);
 		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 		glGenBuffers(1,&CYL_NORM_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,CYL_NORM_VBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(Vector3f)*(numCylinVerts),cylinNormals, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(Vector3f)*(TotalCylinderVertex),NormalsCylinders, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, CYL_NORM_VBO);
 
 
@@ -129,13 +211,13 @@ public:
 	void RenderDisplay()
 	{
 		
-		RenderSphere(0,0,0);
+		RenderSphere();
 		RenderCylinder();
 
 		
 	}
 
-	void RenderSphere(float x , float y, float z)
+	void RenderSphere()
 	{
 		glBindBuffer(GL_ARRAY_BUFFER,SPH_VBO);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
@@ -146,7 +228,7 @@ public:
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER,SPH_VBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,SPH_IBO);
-		glDrawElements(GL_TRIANGLES,numSphereTris*3,GL_UNSIGNED_INT,0);
+		glDrawElements(GL_TRIANGLES,TotalSphereIndex,GL_UNSIGNED_INT,0);
 		glBindVertexArray(0);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(0);
@@ -164,7 +246,7 @@ public:
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER,CYL_VBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,CYL_IBO);
-		glDrawElements(GL_TRIANGLES,numCylinVerts*3,GL_UNSIGNED_INT,0);
+		glDrawElements(GL_TRIANGLES,TotalCylinderIndex,GL_UNSIGNED_INT,0);
 		glBindVertexArray(0);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(0);
@@ -176,8 +258,6 @@ public:
 	void UnitSphere(int slices, int stacks){
 		if (sphereVerts != NULL) free(sphereVerts);
 		if (sphereIndices != NULL) free(sphereIndices);
-
-		
 
 		numSphereVerts = slices * (stacks-1) + 2;
 		sphereVerts =  (Vector3f *) malloc(numSphereVerts * sizeof(Vector3f));
@@ -267,12 +347,12 @@ public:
 		cylinNormals =  (Vector3f *) malloc(numCylinVerts * sizeof(Vector3f));
 		int count = 0;
 		for (int j=0; j<slices; j++){
-			float x = cos(2*M_PI*j/slices);
-			float y = sin(2*M_PI*j/slices);
-			cylinNormals[count] = Vector3f(x, y, 0);
-			cylinVerts[count++] = Vector3f(x, y, 0);
-			cylinNormals[count] = Vector3f(x, y, 0);
-			cylinVerts[count++] = Vector3f(x, y, 1);
+			float x = 0.1*cos(2*M_PI*j/slices);
+			float y = 0.1*sin(2*M_PI*j/slices);
+			cylinNormals[count] = Vector3f(x,y,0);
+			cylinVerts[count++] = Vector3f(x,y,0);
+			cylinNormals[count] = Vector3f(x,y,0);
+			cylinVerts[count++] = Vector3f(x,y,1);
 		}
 
 		numCylinTris = slices * 2;

@@ -26,7 +26,7 @@ static void RenderScene()
 	Matrix4f WorldProj, PersProj,CameraTrans, TrackballTrans, WorldTrans;
 	TrackballTrans=track.RenderMatrix();
 	CameraTrans=cam.RenderMatrix();
-	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,0.1,100));
+	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,0.1,10000));
 	WorldTrans=TrackballTrans;
 	WorldProj=PersProj*CameraTrans*WorldTrans;
 	glUniformMatrix4fv(gWVPLocation,1,GL_TRUE,&WorldProj.m[0][0]);
@@ -35,9 +35,9 @@ static void RenderScene()
 	SetLightsInShader(lights);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//protein.RenderDisplay();
+	protein.RenderDisplay();
 	if(CRD_FILE)
-	{
+	{	
 		ligand.RenderDisplay();	
 	}
 	
