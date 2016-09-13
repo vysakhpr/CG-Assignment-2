@@ -99,7 +99,7 @@ public:
 	Matrix4f RenderMatrix()
 	{
 		Matrix4f CameraTranslateTrans,CameraTrans;
-		CameraTranslateTrans.InitTranslationTransform(0,0,boundBox.ZWidth);
+		CameraTranslateTrans.InitTranslationTransform(0,0,WorldBoundBox.ZWidth);
 		CheckEdges();
 		CameraTrans.InitCameraTransform(Target,Up);
 		return CameraTrans*CameraTranslateTrans;

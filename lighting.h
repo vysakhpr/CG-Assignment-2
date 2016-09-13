@@ -40,7 +40,7 @@ public:
 		PLight.Color=Vector3f(1.0,1.0,1.0);
 		PLight.Position=Vector3f(0.0,0.0,0.0);
 		PLight.AmbientIntensity=0.0f;
-		PLight.DiffuseIntensity=0.4f;
+		PLight.DiffuseIntensity=0.6f;
 		PLight.Attenuation.Constant=1.0f;
 		PLight.Attenuation.Linear=0.1f;
 		PLight.Attenuation.Exponential=0.001f;

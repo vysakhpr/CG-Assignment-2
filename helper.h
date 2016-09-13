@@ -227,6 +227,7 @@ int FreeOffModel(OffModel *model)
 /* Handling OFF file -- End */
 
 /* Generate unit sphere and unit cylinder -- start */
+/*
 Vector3f *sphereVerts = NULL;
 GLuint *sphereIndices = NULL;
 int numSphereVerts = 0;
@@ -239,10 +240,10 @@ int numCylinVerts = 0;
 int numCylinTris = 0;
 
 GLuint SPH_VBO, CYL_VBO, CYL_NORM_VBO, SPH_IBO, CYL_IBO;
-
+*/
 /* Generate unit sphere centered at origin of radius 1. The parameters slices and stacks 
 control the number of triangles generated for the sphere. You can use 20 as a good value for slices and stacks. */
-void UnitSphere(int slices, int stacks){
+/*void UnitSphere(int slices, int stacks){
 	if (sphereVerts != NULL) free(sphereVerts);
 	if (sphereIndices != NULL) free(sphereIndices);
 	numSphereVerts = slices * (stacks-1) + 2;
@@ -261,7 +262,7 @@ void UnitSphere(int slices, int stacks){
 	sphereVerts[count++] = Vector3f(0, 0, -1);
 
 	numSphereTris = slices * (stacks-2) * 2 + 2 * slices;
-	sphereIndices =  (GLuint *) malloc(numSphereTris * sizeof(Vector3f));
+	sphereIndices =  (GLuint *) malloc(numSphereTris * sizeof(GLuint *));
 	count = 0;
 	for (int i=1; i<stacks-1; i++){
 		for (int j=0; j<slices; j++){
@@ -316,9 +317,9 @@ void UnitSphere(int slices, int stacks){
 		}
 	}
 }
-
+*/
 /* Generate unit cylinder with base at XY plane of radius 1 and height 1. You can use 10 as a good value for slices and stacks.*/
-void UnitCylinder(int slices, int stacks){
+/*void UnitCylinder(int slices, int stacks){
 	if (cylinVerts != NULL) free(cylinVerts);
 	if (cylinNormals != NULL) free(cylinNormals);
 	if (cylinIndices != NULL) free(cylinIndices);
@@ -361,7 +362,7 @@ void UnitCylinder(int slices, int stacks){
 	cylinIndices[3*count + 2] = 0;
 	count++;
 }
-
+*/
 /* Generate unit sphere and unit cylinder -- end */
 
 

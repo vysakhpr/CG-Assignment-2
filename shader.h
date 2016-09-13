@@ -1,7 +1,8 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-GLuint VBO,VAO,IBO;
+#include "lighting.h"
+
 GLuint gWorldLocation,gWVPLocation,DLightColorLocation,DLightAmbientIntensityLocation,DLightDirectionLocation,DLightDiffuseIntensityLocation;
 GLuint gEyeWorldPositionLocation,SpecularIntensityLocation,SpecularPowerLocation;
 GLuint PLightColorLocation, PLightAmbientIntensityLocation, PLightDiffuseIntensityLocation, PLightPositionLocation;
@@ -36,6 +37,7 @@ static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum Shad
 using namespace std;
 
 static void CompileShaders() {
+
 	GLuint ShaderProgram = glCreateProgram();
 
 	if (ShaderProgram == 0) {
@@ -65,6 +67,7 @@ static void CompileShaders() {
 	GLchar ErrorLog[1024] = {0};
 
 	glLinkProgram(ShaderProgram);
+	
 	glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
 	if (Success == 0) {
 		glGetProgramInfoLog(ShaderProgram, sizeof (ErrorLog), NULL, ErrorLog);
@@ -111,6 +114,29 @@ static void CompileShaders() {
 
 }
 
+
+void SetLightsInShader(Lighting lights)
+{
+	DirectionalLight DLight=lights.GetDirectionalLight();
+	glUniform3f(DLightColorLocation, DLight.Color.x, DLight.Color.y, DLight.Color.z);
+    glUniform1f(DLightAmbientIntensityLocation, DLight.AmbientIntensity);
+    Vector3f Direction=DLight.Direction;
+    Direction.Normalize();
+    glUniform3f(DLightDirectionLocation,Direction.x,Direction.y,Direction.z);
+    glUniform1f(DLightDiffuseIntensityLocation,DLight.DiffuseIntensity);
+    glUniform3f(gEyeWorldPositionLocation,0,0,-WorldBoundBox.ZWidth);
+    glUniform1f(SpecularIntensityLocation,1.0f);
+    glUniform1f(SpecularPowerLocation,32);
+    PositionalLight PLight=lights.GetPositionalLight();
+    glUniform3f(PLightColorLocation,PLight.Color.x,PLight.Color.y,PLight.Color.z);
+    glUniform3f(PLightPositionLocation,PLight.Position.x,PLight.Position.y,PLight.Position.z);
+    glUniform1f(PLightDiffuseIntensityLocation,PLight.DiffuseIntensity);
+    glUniform1f(PLightAmbientIntensityLocation, PLight.AmbientIntensity);
+    glUniform1f(PLightAttenuationConstantLocation,PLight.Attenuation.Constant);
+    glUniform1f(PLightAttenuationLinearLocation,PLight.Attenuation.Linear);
+    glUniform1f(PLightAttenuationExpLocation,PLight.Attenuation.Exponential);
+
+}
 
 
 #endif

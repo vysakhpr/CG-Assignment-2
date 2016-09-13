@@ -13,51 +13,36 @@ Camera cam;
 TrackBall track;
 Lighting lights;
 
-
+struct MouseMotion
+{
+	int pre_x;
+	int pre_y;
+}mouse;
 static void RenderScene()
 {
 
-	lights.SetPositionalLightPosition(Vector3f(boundBox.XWidth/2,boundBox.YWidth/2,-boundBox.ZWidth/2));
+	lights.SetPositionalLightPosition(Vector3f(protein.boundBox.XWidth/2,protein.boundBox.YWidth/2,-protein.boundBox.ZWidth/2));
 
 	Matrix4f WorldProj, PersProj,CameraTrans, TrackballTrans, WorldTrans;
 	TrackballTrans=track.RenderMatrix();
 	CameraTrans=cam.RenderMatrix();
-	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,Scale*1,Scale*100));
+	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,0.1,100));
 	WorldTrans=TrackballTrans;
 	WorldProj=PersProj*CameraTrans*WorldTrans;
 	glUniformMatrix4fv(gWVPLocation,1,GL_TRUE,&WorldProj.m[0][0]);
 	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldTrans.m[0][0]);
 
-	DirectionalLight DLight=lights.GetDirectionalLight();
-	glUniform3f(DLightColorLocation, DLight.Color.x, DLight.Color.y, DLight.Color.z);
-    glUniform1f(DLightAmbientIntensityLocation, DLight.AmbientIntensity);
-    Vector3f Direction=DLight.Direction;
-    Direction.Normalize();
-    glUniform3f(DLightDirectionLocation,Direction.x,Direction.y,Direction.z);
-    glUniform1f(DLightDiffuseIntensityLocation,DLight.DiffuseIntensity);
-    glUniform3f(gEyeWorldPositionLocation,0,0,-boundBox.ZWidth);
-    glUniform1f(SpecularIntensityLocation,1.0f);
-    glUniform1f(SpecularPowerLocation,32);
-    PositionalLight PLight=lights.GetPositionalLight();
-    glUniform3f(PLightColorLocation,PLight.Color.x,PLight.Color.y,PLight.Color.z);
-    glUniform3f(PLightPositionLocation,PLight.Position.x,PLight.Position.y,PLight.Position.z);
-    glUniform1f(PLightDiffuseIntensityLocation,PLight.DiffuseIntensity);
-    glUniform1f(PLightAmbientIntensityLocation, PLight.AmbientIntensity);
-    glUniform1f(PLightAttenuationConstantLocation,PLight.Attenuation.Constant);
-    glUniform1f(PLightAttenuationLinearLocation,PLight.Attenuation.Linear);
-    glUniform1f(PLightAttenuationExpLocation,PLight.Attenuation.Exponential);
-
+	SetLightsInShader(lights);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
-	glDrawElements(GL_TRIANGLES,protein->numberOfTriangles*3,GL_UNSIGNED_INT,0);
-	glBindVertexArray(0);
+	//protein.RenderDisplay();
+	if(CRD_FILE)
+	{
+		ligand.RenderDisplay();	
+	}
+	
+
 	GLenum errorCode = glGetError();
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(0);
 	if (errorCode == GL_NO_ERROR) {
 		glutSwapBuffers();
 	} else {
@@ -85,12 +70,10 @@ static void onPassiveMouseMotion(int x, int y)
 
 static void onActiveMouseMotion(int x, int y)
 {
-	static int pre_x=WINDOW_WIDTH/2;
-	static int pre_y=WINDOW_HEIGHT/2;
-	int dx=x - pre_x;
-	int dy=y- pre_y;
-	pre_x=x;
-	pre_y=y;
+	int dx=x - mouse.pre_x;
+	int dy=y- mouse.pre_y;
+	mouse.pre_x=x;
+	mouse.pre_y=y;
 	track.SetAngles(-dx,-dy,x,y);
 	glutPostRedisplay();
 }
@@ -98,6 +81,12 @@ static void onActiveMouseMotion(int x, int y)
 
 static void onMousePress(int button, int state, int x, int y)
 {
+	if(state==GLUT_DOWN)
+	{
+		mouse.pre_x=x;
+		mouse.pre_y=y;
+	}
+
 	if(button==3 && cam.FieldOfView() != 1)
 	{
 		cam.ZoomIn();
