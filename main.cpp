@@ -30,10 +30,14 @@ struct BoundBox
 
 	BoundBox()
 	{
-		Center=Vector3f(0.0,0.0,0.0);
-		XWidth=4;
-		YWidth=4;
-		ZWidth=4;
+		
+	}
+	BoundBox(Vector3f v,float x, float y, float z,int i)
+	{
+		Center=v;
+		XWidth=i*x;
+		YWidth=i*y;
+		ZWidth=i*z;
 	}
 }WorldBoundBox;
 

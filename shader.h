@@ -2,11 +2,13 @@
 #define SHADER_H
 
 #include "lighting.h"
+#include "camera.h"
 
 GLuint gWorldLocation,gWVPLocation,DLightColorLocation,DLightAmbientIntensityLocation,DLightDirectionLocation,DLightDiffuseIntensityLocation;
 GLuint gEyeWorldPositionLocation,SpecularIntensityLocation,SpecularPowerLocation;
 GLuint PLightColorLocation, PLightAmbientIntensityLocation, PLightDiffuseIntensityLocation, PLightPositionLocation;
 GLuint PLightAttenuationConstantLocation,PLightAttenuationLinearLocation,PLightAttenuationExpLocation;
+GLuint LigandFlagLocation, LigandTransLocation;
 
 static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType) {
 	GLuint ShaderObj = glCreateShader(ShaderType);
@@ -100,22 +102,24 @@ static void CompileShaders() {
 	PLightAttenuationConstantLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Attenuation.Constant");
 	PLightAttenuationLinearLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Attenuation.Linear");
 	PLightAttenuationExpLocation=glGetUniformLocation(ShaderProgram,"gPositionalLight.Attenuation.Exponential");
+	LigandFlagLocation=glGetUniformLocation(ShaderProgram,"gLigandFlag");
+	LigandTransLocation=glGetUniformLocation(ShaderProgram,"gLigandTrans");
 	if(	gWVPLocation==0xFFFFFFFF || gWorldLocation==0xFFFFFFFF || DLightColorLocation==0xFFFFFFFF ||
 		DLightAmbientIntensityLocation==0xFFFFFFFF || DLightDirectionLocation == 0xFFFFFFFF ||
 		DLightDiffuseIntensityLocation == 0xFFFFFFFF || gEyeWorldPositionLocation == 0xFFFFFFFF ||
 		SpecularIntensityLocation == 0xFFFFFFFF || SpecularPowerLocation == 0xFFFFFFFF || PLightColorLocation == 0xFFFFFFFF ||
 		PLightPositionLocation == 0xFFFFFFFF || PLightAmbientIntensityLocation == 0xFFFFFFFF || PLightDiffuseIntensityLocation 
 		 == 0xFFFFFFFF || PLightAttenuationConstantLocation == 0xFFFFFFFF || PLightAttenuationLinearLocation == 0xFFFFFFFF || 
-		 PLightAttenuationExpLocation == 0xFFFFFFFF)
+		 PLightAttenuationExpLocation == 0xFFFFFFFF || LigandTransLocation == 0xFFFFFFFF || LigandFlagLocation == 0xFFFFFFFF)
 	{
 		cout<<"Location Cannot be found"<<endl;
 		exit(1);
 	}
-
+	glUniform1i(LigandFlagLocation,0);
 }
 
 
-void SetLightsInShader(Lighting lights)
+void SetLightsInShader(Lighting lights, Camera cam)
 {
 	DirectionalLight DLight=lights.GetDirectionalLight();
 	glUniform3f(DLightColorLocation, DLight.Color.x, DLight.Color.y, DLight.Color.z);
@@ -124,7 +128,7 @@ void SetLightsInShader(Lighting lights)
     Direction.Normalize();
     glUniform3f(DLightDirectionLocation,Direction.x,Direction.y,Direction.z);
     glUniform1f(DLightDiffuseIntensityLocation,DLight.DiffuseIntensity);
-    glUniform3f(gEyeWorldPositionLocation,0,0,-WorldBoundBox.ZWidth);
+    glUniform3f(gEyeWorldPositionLocation,cam.GetPosition().x,cam.GetPosition().y,cam.GetPosition().z);
     glUniform1f(SpecularIntensityLocation,1.0f);
     glUniform1f(SpecularPowerLocation,32);
     PositionalLight PLight=lights.GetPositionalLight();

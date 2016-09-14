@@ -5,13 +5,7 @@
 #include "math_utils.h"
 #include "shader.h"
 #include "quaternion.h"
-#include "camera.h"
-#include "trackball.h"
-#include "lighting.h"
-
-Camera cam;
-TrackBall track;
-Lighting lights;
+#include "buffer.h"
 
 struct MouseMotion
 {
@@ -31,14 +25,15 @@ static void RenderScene()
 	WorldProj=PersProj*CameraTrans*WorldTrans;
 	glUniformMatrix4fv(gWVPLocation,1,GL_TRUE,&WorldProj.m[0][0]);
 	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldTrans.m[0][0]);
+	glUniform1i(LigandFlagLocation,0);
 
-	SetLightsInShader(lights);
+	SetLightsInShader(lights,cam);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	protein.RenderDisplay();
 	if(CRD_FILE)
 	{	
-		ligand.RenderDisplay();	
+		ligand.RenderDisplay(cam);	
 	}
 	
 
@@ -117,7 +112,8 @@ static void onKeyPress(unsigned char key, int x, int y)
 		case 'A':	lights.ToggleDirectionalLightSwitch();break;
 		case 'z':
 		case 'Z':	lights.TogglePositionalLightSwitch();break;
-		default: exit(1);
+		default:glUniform1i(LigandFlagLocation,0); 
+				exit(1);
 	}
 }
 

@@ -4,6 +4,7 @@
 
 #include "math_utils.h"
 #include "helper.h"
+#include "camera.h"
 
 class LigandMolecule
 {
@@ -22,8 +23,11 @@ public:
 	int numCylinTris;
 	int TotalSphereVertex,TotalCylinderVertex;
 	int TotalSphereIndex,TotalCylinderIndex;
-		
+	Vector3f TranslateVectorToProtein;
+	float translateligandX,translateligandY,translateligandZ;	
 	GLuint SPH_VBO, SPH_NORM_VBO, SPH_IBO, VAO,CYL_VBO, CYL_NORM_VBO,CYL_IBO;
+
+	Matrix4f LigandTrans,LigandRotate,LigandTranslate,LigandRevolve;
 
 
 	LigandMolecule()
@@ -37,7 +41,9 @@ public:
 		cylinIndices = NULL;
 		numCylinVerts = 0;
 		numCylinTris = 0;
-	
+		translateligandX=0;
+		translateligandY=0;
+		translateligandZ=0;
 	}
 	
 
@@ -47,7 +53,9 @@ public:
 		int slices,stacks;
 		slices=80;
 		stacks=80;
-		ligand=readCrdFile(crdFile);
+		ligand=readCrdFile(crdFile);	
+
+		TranslateVectorToProtein=Vector3f((ligand->destCoords[0])-(ligand->srcCoords[0]),(ligand->destCoords[1]-ligand->srcCoords[1]),(ligand->destCoords[2]-ligand->srcCoords[2]));
 		TotalSphereVertex=ligand->numAtoms*(slices * (stacks-1) + 2);
 		TotalSphereIndex=ligand->numAtoms*((slices * (stacks-2) * 2 + 2 * slices)*3);
 		VertexSpheres=new Vector3f[TotalSphereVertex];
@@ -59,9 +67,9 @@ public:
 
 			for(i=0;i<numSphereVerts;i++)
 			{
-				sphereVerts[i].x*=0.2*atomic_radii[(ligand->atoms[k]).type-1];
-				sphereVerts[i].y*=0.2*atomic_radii[(ligand->atoms[k]).type-1];
-				sphereVerts[i].z*=0.2*atomic_radii[(ligand->atoms[k]).type-1];
+				sphereVerts[i].x*=0.3*atomic_radii[(ligand->atoms[k]).type-1];
+				sphereVerts[i].y*=0.3*atomic_radii[(ligand->atoms[k]).type-1];
+				sphereVerts[i].z*=0.3*atomic_radii[(ligand->atoms[k]).type-1];
 				sphereVerts[i].x+=ligand->atoms[k].x;
 				sphereVerts[i].y+=ligand->atoms[k].y;
 				sphereVerts[i].z+=ligand->atoms[k].z;
@@ -155,20 +163,6 @@ public:
 			}
 		}
 		
-		for (i = 0; i < TotalSphereVertex; ++i)
-		{
-			Vector3f TranslateCoordinates=Vector3f(ligand->srcCoords[0],ligand->srcCoords[1],ligand->srcCoords[2]);
-			Vector3f Distance= TranslateCoordinates-VertexSpheres[i];
-			VertexSpheres[i]+=Distance*0.9;
-		}
-
-		for (i = 0; i < TotalCylinderVertex; ++i)
-		{
-			Vector3f TranslateCoordinates=Vector3f(ligand->srcCoords[0],ligand->srcCoords[1],ligand->srcCoords[2]);
-			Vector3f Distance= TranslateCoordinates- VertexCylinders[i];
-			VertexCylinders[i]+=Distance*0.9;
-		}
-
 		glBindVertexArray(VAO);
 		glGenBuffers(1,&SPH_IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,SPH_IBO);
@@ -204,16 +198,78 @@ public:
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		FreeMolecule(ligand);
 	}
 
 
-	void RenderDisplay()
+	void RenderDisplay(Camera &cam)
 	{
 		
+		static float rotateLigand=0;
+		//cam.SetPosition(Vector3f(ligand->srcCoords[0],ligand->srcCoords[2],ligand->srcCoords[2]));
+		Vector4f TargetTrans,UpTrans,OriginTrans,OriginVectorTrans;
+		TargetTrans=Vector4f(0,0,1,1);
+		UpTrans=Vector4f(0,1,0,1);
+		OriginVectorTrans=Vector4f(0,0,0,1);
+		OriginTrans=Vector4f(ligand->srcCoords[0],ligand->srcCoords[1],ligand->srcCoords[2],1);
+		
+		LigandRotate.InitAxisRotateTransform(Vector3f(0,0,1),rotateLigand);
+		
+		LigandTranslate.InitTranslationTransform(ligand->srcCoords[0],ligand->srcCoords[1],ligand->srcCoords[2]);
+		Matrix4f Translate;
+		Translate.InitTranslationTransform(translateligandX,translateligandY,translateligandZ);
+		LigandTrans=Translate*LigandTranslate*LigandRotate;
+
+
+		cam.LockCamera();
+		TargetTrans=LigandTranslate*LigandRotate*TargetTrans;
+		UpTrans=LigandTranslate*UpTrans;
+		OriginVectorTrans=LigandTranslate*OriginVectorTrans;
+		OriginTrans=Translate*LigandTranslate*OriginTrans;
+		Vector3f Target=Vector3f(TargetTrans.x,TargetTrans.y,TargetTrans.z);
+		Vector3f Up=Vector3f(UpTrans.x- OriginVectorTrans.x,UpTrans.y- OriginVectorTrans.y,UpTrans.z- OriginVectorTrans.z);
+		Vector3f Origin=Vector3f(OriginTrans.x,OriginTrans.y,OriginTrans.z);
+		Target.Normalize();
+		Up.Normalize();
+		
+		cam.SetOrientation(Target*-1,Up);
+		cam.SetPosition(Origin);
+		glUniform1i(LigandFlagLocation,1);
+		glUniformMatrix4fv(LigandTransLocation,1,GL_TRUE,&LigandTrans.m[0][0]);
+
 		RenderSphere();
 		RenderCylinder();
+		glUniform1i(LigandFlagLocation,0);
+		
 
+		int shouldRotate=0;
+		Vector3f temp=TranslateVectorToProtein;
+		temp.Normalize();
+		temp=temp*0.1;
+		static int x=TranslateVectorToProtein.x/temp.x;
+		static int y=TranslateVectorToProtein.y/temp.y;
+		static int z=TranslateVectorToProtein.z/temp.z;
+		if(x!=0)
+		{
+			translateligandX+=temp.x;
+			x--;
+			shouldRotate=1;
+		}
+		if(y!=0)
+		{
+			translateligandY+=temp.y;
+			y--;
+			shouldRotate=1;
+		}
+		if(z!=0)
+		{
+			translateligandZ+=temp.z;
+			z--;
+			shouldRotate=1;
+		}
+		if(shouldRotate)
+			rotateLigand+=2*M_PI*(temp.x/TranslateVectorToProtein.x);
+		else
+			rotateLigand=0;
 		
 	}
 
@@ -347,8 +403,8 @@ public:
 		cylinNormals =  (Vector3f *) malloc(numCylinVerts * sizeof(Vector3f));
 		int count = 0;
 		for (int j=0; j<slices; j++){
-			float x = 0.1*cos(2*M_PI*j/slices);
-			float y = 0.1*sin(2*M_PI*j/slices);
+			float x = 0.3*cos(2*M_PI*j/slices);
+			float y = 0.3*sin(2*M_PI*j/slices);
 			cylinNormals[count] = Vector3f(x,y,0);
 			cylinVerts[count++] = Vector3f(x,y,0);
 			cylinNormals[count] = Vector3f(x,y,0);

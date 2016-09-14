@@ -9,6 +9,7 @@ class Camera
 {
 	Vector3f Target;
 	Vector3f Up;
+	Vector3f Position;
 	float ZoomFactor;
 	float PanHorizontalAngle;
 	float PanVerticalAngle;
@@ -33,7 +34,7 @@ public:
     	OnRightEdge = false;
     	Vector3f HTarget=Vector3f(Target.x,0,Target.z);
     	HTarget.Normalize();
-
+    	Position=Vector3f(0,0,0);
     	if(HTarget.z>=0.0f)
     	{
     		if(HTarget.x>=0.0f)
@@ -57,7 +58,24 @@ public:
 	{
 		ResetCamera();
 	}
+
+	void SetOrientation(Vector3f t, Vector3f u)
+	{
+		t.Normalize();
+		u.Normalize();
+		Target=t;
+		Up=u;
+	}
 	
+	void SetPosition(Vector3f v)
+	{
+		Position=v;
+	}
+
+	Vector3f GetPosition()
+	{
+		return Position;
+	}
 	void LockCamera()
 	{
 		Locked=true;
@@ -99,7 +117,8 @@ public:
 	Matrix4f RenderMatrix()
 	{
 		Matrix4f CameraTranslateTrans,CameraTrans;
-		CameraTranslateTrans.InitTranslationTransform(0,0,WorldBoundBox.ZWidth);
+		CameraTranslateTrans.InitTranslationTransform(-1*Position.x,-1*Position.y,-1*Position.z);
+
 		CheckEdges();
 		CameraTrans.InitCameraTransform(Target,Up);
 		return CameraTrans*CameraTranslateTrans;
