@@ -140,6 +140,7 @@ int FreeMolecule(Molecule *mol)
 typedef struct Vt {
 	float x,y,z;
 	Vector3f Normal;
+	Vector3f Color;
 }Vertex;
 
 typedef struct Tri {
@@ -196,6 +197,8 @@ OffModel* readOffFile(char * OffFile) {
 		(model->vertices[i]).y = y;
 		(model->vertices[i]).z = z;
 		(model->vertices[i]).Normal=Vector3f(0.0,0.0,0.0);
+		(model->vertices[i]).Color=Vector3f(0.0,1.0,0.0);
+
 	}
 
 	/* Read the Triangles */	

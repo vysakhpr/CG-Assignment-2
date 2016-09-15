@@ -7,13 +7,14 @@
 class ProteinMolecule
 {	
 public:
-	GLuint VBO,IBO,VAO;
+	GLuint VBO,IBO,VAO,CBO;
 	BoundBox boundBox;
 	OffModel *protein;
 
 
 	ProteinMolecule()
 	{
+		
 	}
 	
 
@@ -120,12 +121,15 @@ public:
 		{
 			(protein->vertices[i]).Normal.Normalize();
 		}
+
+
 		glGenBuffers(1,&IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*(protein->numberOfTriangles)*3, Indices, GL_STATIC_DRAW);
 		glGenBuffers(1,&VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,VBO);
 		glBufferData(GL_ARRAY_BUFFER,sizeof(Vertex)*(protein->numberOfVertices), protein->vertices, GL_STATIC_DRAW);
+
 
 
 		//glEnableVertexAttribArray(0);
@@ -141,6 +145,7 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)(sizeof(float)*3));
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)(sizeof(float)*6));
 		//glDisableVertexAttribArray(1);
 		//glDisableVertexAttribArray(0);
 
@@ -152,11 +157,13 @@ public:
 		
 		glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 	glBindBuffer(GL_ARRAY_BUFFER,VBO);
 	glDrawElements(GL_TRIANGLES,protein->numberOfTriangles*3,GL_UNSIGNED_INT,0);
 	glBindVertexArray(0);
+	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(0);
 	

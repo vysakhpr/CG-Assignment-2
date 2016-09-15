@@ -1,4 +1,5 @@
 #version 330
+in vec3 Color0;
 
 out vec4 FragColor;
 struct DirectionalLight
@@ -97,5 +98,5 @@ vec4  CalculatePositionalLight()
 void main()
 {
 	vec4 TotalLight=CalculateDirectionalLight()+CalculatePositionalLight();
-    FragColor = vec4(0.0, 1.0, 0.0, 1.0)*TotalLight;
+    FragColor = vec4(Color0, 1.0)*TotalLight;
 }

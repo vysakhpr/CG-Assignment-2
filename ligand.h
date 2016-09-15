@@ -11,8 +11,8 @@ class LigandMolecule
 public:
 	BoundBox boundBox;
 	Molecule* ligand;
-	Vector3f *sphereVerts,*VertexSpheres;
-	Vector3f *sphereNormals,*NormalsSpheres;
+	Vector3f *sphereVerts,*VertexSpheres,*ColorSpheres;
+	Vector3f *sphereNormals,*NormalsSpheres,*ColorCylinders;
 	GLuint *sphereIndices,*IndexSpheres;
 	int numSphereVerts,numVertexSpheres;
 	int numSphereTris,numVertexTriangles;
@@ -25,7 +25,7 @@ public:
 	int TotalSphereIndex,TotalCylinderIndex;
 	Vector3f TranslateVectorToProtein;
 	float translateligandX,translateligandY,translateligandZ;	
-	GLuint SPH_VBO, SPH_NORM_VBO, SPH_IBO, VAO,CYL_VBO, CYL_NORM_VBO,CYL_IBO;
+	GLuint SPH_VBO, SPH_NORM_VBO, SPH_IBO, VAO,CYL_VBO, CYL_NORM_VBO,CYL_IBO,SPH_CBO,CYL_CBO;
 
 	Matrix4f LigandTrans,LigandRotate,LigandTranslate,LigandRevolve;
 
@@ -59,6 +59,7 @@ public:
 		TotalSphereVertex=ligand->numAtoms*(slices * (stacks-1) + 2);
 		TotalSphereIndex=ligand->numAtoms*((slices * (stacks-2) * 2 + 2 * slices)*3);
 		VertexSpheres=new Vector3f[TotalSphereVertex];
+		ColorSpheres=new Vector3f[TotalSphereVertex];
 		NormalsSpheres=new Vector3f[TotalSphereVertex];
 		IndexSpheres=new GLuint[TotalSphereIndex];
 		for(int k=0;k<ligand->numAtoms;k++){
@@ -108,7 +109,18 @@ public:
 			{
 				VertexSpheres[k*numSphereVerts+i]=sphereVerts[i];
 				NormalsSpheres[k*numSphereVerts+i]=sphereNormals[i];
-			}
+				float colorx;
+				float colory;
+				float colorz;
+				colorx=(float)atomColors[ligand->atoms[k].type-1][0];
+				colory=(float)atomColors[ligand->atoms[k].type-1][1];
+				colorz=(float)atomColors[ligand->atoms[k].type-1][2];
+				colorx/=256;
+				colory/=256;
+				colorz/=256;
+				ColorSpheres[k*numSphereVerts+i]=Vector3f(colorx,colory,colorz);
+				//cout<<colorx<<colory<<colorz<<endl;
+			}	
 
 			for (i = 0; i < numSphereTris*3; ++i)
 			{
@@ -125,6 +137,7 @@ public:
 		TotalCylinderIndex=ligand->numBonds*((slices * 2)*3);
 		VertexCylinders=new Vector3f[TotalCylinderVertex];
 		NormalsCylinders=new Vector3f[TotalCylinderVertex];
+		ColorCylinders=new Vector3f[TotalCylinderVertex];
 		IndexCylinders=new GLuint[TotalCylinderIndex];
 		
 		
@@ -155,6 +168,7 @@ public:
 			{
 				VertexCylinders[k*numCylinVerts+i]=cylinVerts[i];
 				NormalsCylinders[k*numCylinVerts+i]=cylinNormals[i];
+				ColorCylinders[k*numCylinVerts+i]=Vector3f(0.5,0.5,0.5);
 			}
 
 			for (i = 0; i < numCylinTris*3; ++i)
@@ -174,6 +188,9 @@ public:
 		glGenBuffers(1,&SPH_NORM_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,SPH_NORM_VBO);
 		glBufferData(GL_ARRAY_BUFFER,sizeof(Vector3f)*(TotalSphereVertex), NormalsSpheres, GL_STATIC_DRAW);
+		glGenBuffers(1,&SPH_CBO);
+		glBindBuffer(GL_ARRAY_BUFFER,SPH_CBO);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(TotalSphereVertex), ColorSpheres, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, SPH_NORM_VBO);
 		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 
@@ -184,6 +201,9 @@ public:
 		glGenBuffers(1,&CYL_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,CYL_VBO);
 		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(TotalCylinderVertex), VertexCylinders, GL_STATIC_DRAW);
+		glGenBuffers(1,&CYL_CBO);
+		glBindBuffer(GL_ARRAY_BUFFER,CYL_CBO);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(TotalCylinderVertex), ColorCylinders, GL_STATIC_DRAW);
 		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 		glGenBuffers(1,&CYL_NORM_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,CYL_NORM_VBO);
@@ -221,16 +241,16 @@ public:
 
 
 		cam.LockCamera();
-		TargetTrans=LigandTranslate*LigandRotate*TargetTrans;
+		TargetTrans=LigandTranslate*TargetTrans;
 		UpTrans=LigandTranslate*UpTrans;
 		OriginVectorTrans=LigandTranslate*OriginVectorTrans;
-		OriginTrans=Translate*LigandTranslate*OriginTrans;
+		OriginTrans=Translate*OriginTrans;
 		Vector3f Target=Vector3f(TargetTrans.x,TargetTrans.y,TargetTrans.z);
 		Vector3f Up=Vector3f(UpTrans.x- OriginVectorTrans.x,UpTrans.y- OriginVectorTrans.y,UpTrans.z- OriginVectorTrans.z);
 		Vector3f Origin=Vector3f(OriginTrans.x,OriginTrans.y,OriginTrans.z);
 		Target.Normalize();
 		Up.Normalize();
-		
+		Origin=Origin- TranslateVectorToProtein;
 		cam.SetOrientation(Target*-1,Up);
 		cam.SetPosition(Origin);
 		glUniform1i(LigandFlagLocation,1);
@@ -279,13 +299,17 @@ public:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 		glBindBuffer(GL_ARRAY_BUFFER, SPH_NORM_VBO);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
+		glBindBuffer(GL_ARRAY_BUFFER, SPH_CBO);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER,SPH_VBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,SPH_IBO);
 		glDrawElements(GL_TRIANGLES,TotalSphereIndex,GL_UNSIGNED_INT,0);
 		glBindVertexArray(0);
+		glDisableVertexAttribArray(2);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(0);
 		
@@ -297,13 +321,17 @@ public:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 		glBindBuffer(GL_ARRAY_BUFFER, CYL_NORM_VBO);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
+		glBindBuffer(GL_ARRAY_BUFFER,CYL_CBO);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER,CYL_VBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,CYL_IBO);
 		glDrawElements(GL_TRIANGLES,TotalCylinderIndex,GL_UNSIGNED_INT,0);
 		glBindVertexArray(0);
+		glDisableVertexAttribArray(2);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(0);
 	}
@@ -403,8 +431,8 @@ public:
 		cylinNormals =  (Vector3f *) malloc(numCylinVerts * sizeof(Vector3f));
 		int count = 0;
 		for (int j=0; j<slices; j++){
-			float x = 0.3*cos(2*M_PI*j/slices);
-			float y = 0.3*sin(2*M_PI*j/slices);
+			float x = 0.2*cos(2*M_PI*j/slices);
+			float y = 0.2*sin(2*M_PI*j/slices);
 			cylinNormals[count] = Vector3f(x,y,0);
 			cylinVerts[count++] = Vector3f(x,y,0);
 			cylinNormals[count] = Vector3f(x,y,0);
