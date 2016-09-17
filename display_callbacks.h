@@ -26,7 +26,7 @@ static void RenderScene()
 	CameraTrans=cam.RenderMatrix();
 	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,0.1,10000));
 	WorldTrans=TrackballTrans;
-	WorldProj=PersProj*CameraTrans*WorldTrans;
+	WorldProj=PersProj*CameraTrans*WorldTrans;            
 
 	glUniformMatrix4fv(gWVPLocation,1,GL_TRUE,&WorldProj.m[0][0]);
 	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldTrans.m[0][0]);
@@ -120,6 +120,8 @@ static void onKeyPress(unsigned char key, int x, int y)
 
 		case 'c':
 		case 'C':	ChainColorFlag=!ChainColorFlag;break;
+		case 'v':
+		case 'V': 	protein.ToggleColoring();
 		case 'e':
 		case 'E': 	ExplodeFlag=!ExplodeFlag;break;
 		default:glUniform1i(LigandFlagLocation,0); 

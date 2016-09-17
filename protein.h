@@ -12,25 +12,30 @@ public:
 	BoundBox boundBox;
 	OffModel *protein;
 	Vector3f *Colors;
-	Patch *patches;
-	int patchno;
-
+	Patch *patches,*aminos;
+	int patchno,amino_no;
+	bool active_amino;
 	ProteinMolecule()
 	{
 		
 	}
 	
-
+	void ToggleColoring()
+	{
+		active_amino=!active_amino;
+	}
 
 	void LoadBuffers(char* OffFile)
 	{
 		float maxBoundX=0,maxBoundY=0,maxBoundZ=0,minBoundX=0,minBoundY=0,minBoundZ=0;
 		patchno=1;
+		amino_no=1;
 		float x,y,z;
 		float dX,dY,dZ,BoundBoxWidth;
 		int i,j;
 		protein=readOffFile(OffFile);
 		Colors=new Vector3f[protein->numberOfVertices];
+		active_amino=false;
 
 		for (i = 0; i < protein->numberOfVertices; i++)
 	 	{
@@ -93,8 +98,9 @@ public:
 	 		(protein->vertices[i]).z-=boundBox.Center.z;
 	 	}
 	
-		int* Indices = NULL;
+		int* Indices = NULL,*EdgeIndices=NULL;
 		Indices=new int[protein->numberOfTriangles*3];
+		EdgeIndices=new int[protein->numberOfTriangles*3];
 		if (Indices==NULL){
 			cout << "Error: Memory couldnot be allocated"<< endl;
 	 		exit(1);
@@ -106,6 +112,10 @@ public:
 				patchno=(protein->triangles[i]).chainID;
 			}
 
+			if((protein->triangles[i]).aminoType>amino_no)
+			{
+				amino_no=(protein->triangles[i]).aminoType;
+			}
 
 	 		Indices[j]=(protein->triangles[i]).v[0];
 	 		Indices[j+1]=(protein->triangles[i]).v[1];
@@ -134,9 +144,17 @@ public:
 		}
 
 		patches=new Patch[patchno];
+		aminos=new Patch[(amino_no)];
+		cout<<amino_no<<endl;
+
 		for(i=0;i<patchno;i++)
 		{
 			patches[i].Init(protein->numberOfTriangles*3,i+1);
+		}
+
+		for(i=0;i<amino_no;i++)
+		{
+			aminos[i].Init(protein->numberOfTriangles*3,i+1);
 		}
 
 		for(i=0;i<protein->numberOfTriangles;i++)
@@ -147,6 +165,14 @@ public:
 			patches[protein->triangles[i].chainID-1].AddTriangle(protein->triangles[i].v[2]);
 		}
 
+		for(i=0;i<protein->numberOfTriangles;i++)
+		{	
+			
+			aminos[protein->triangles[i].aminoType-1].AddTriangle(protein->triangles[i].v[0]);
+			aminos[protein->triangles[i].aminoType-1].AddTriangle(protein->triangles[i].v[1]);
+			aminos[protein->triangles[i].aminoType-1].AddTriangle(protein->triangles[i].v[2]);
+		}
+
 
 		//patches[0].Print();
 		for (i = 0; i < patchno; ++i)
@@ -155,6 +181,13 @@ public:
 			patches[i].SetColor(aminoColors[i][0],aminoColors[i][1],aminoColors[i][2]);
 		}
 
+		for (i = 0; i < amino_no; ++i)
+		{
+			aminos[i].GenBuffer();
+			aminos[i].SetColor(aminoColors[i][0],aminoColors[i][1],aminoColors[i][2]);
+		}
+
+		
 		glGenBuffers(1,&IBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*(protein->numberOfTriangles)*3, Indices, GL_STATIC_DRAW);
@@ -211,25 +244,44 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 		glBindBuffer(GL_ARRAY_BUFFER,VBO);
 	//glDrawElements(GL_TRIANGLES,protein->numberOfTriangles*3,GL_UNSIGNED_INT,0);
-		for (int i = 0; i < patchno; ++i)
+		if(active_amino)
 		{
-			Vector3f v=PatchCenter(patches[i]);
-			v.Normalize();
-			v=v*10;
-			Matrix4f ExplodeTrans;
-			ExplodeTrans.InitTranslationTransform(v.x,v.y,v.z);
+			for (int i = 0; i < amino_no; ++i)
+			{
+				Matrix4f ExplodeTrans;
+				ExplodeTrans.InitTranslationTransform(0,0,0);
 			
-			glUniformMatrix4fv(ExplodeTranslateLocation,1,GL_TRUE,&ExplodeTrans.m[0][0]);
-			patches[i].RenderColor();
-			patches[i].RenderPatch();
-		}
+				glUniformMatrix4fv(ExplodeTranslateLocation,1,GL_TRUE,&ExplodeTrans.m[0][0]);
+				aminos[i].RenderColor();
+				aminos[i].RenderPatch();
+			}
 		
+		}
+		else
+		{
+			for (int i = 0; i < patchno; ++i)
+			{
+				Vector3f v=PatchCenter(patches[i]);
+				v.Normalize();
+				v=v*10;
+				Matrix4f ExplodeTrans;
+				ExplodeTrans.InitTranslationTransform(v.x,v.y,v.z);
+			
+				glUniformMatrix4fv(ExplodeTranslateLocation,1,GL_TRUE,&ExplodeTrans.m[0][0]);
+				patches[i].RenderColor();
+				patches[i].RenderPatch();
+			}
+		}
+
 		glBindVertexArray(0);
 		glDisableVertexAttribArray(2);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(0);
 	
 	}
+
+
+
 
 	Vector3f PatchCenter(Patch &p)
 	{
