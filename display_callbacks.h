@@ -7,6 +7,9 @@
 #include "quaternion.h"
 #include "buffer.h"
 
+bool ChainColorFlag=false;
+bool ExplodeFlag=false;
+
 struct MouseMotion
 {
 	int pre_x;
@@ -14,7 +17,8 @@ struct MouseMotion
 }mouse;
 static void RenderScene()
 {
-
+	glUniform1i(ChainColorFlagLocation,ChainColorFlag);
+	glUniform1i(ExplodeFlagLocation,ExplodeFlag);
 	lights.SetPositionalLightPosition(Vector3f(protein.boundBox.XWidth/2,protein.boundBox.YWidth/2,-protein.boundBox.ZWidth/2));
 
 	Matrix4f WorldProj, PersProj,CameraTrans, TrackballTrans, WorldTrans;
@@ -23,6 +27,7 @@ static void RenderScene()
 	PersProj.InitPersProjTransform(PersProjInfo(cam.FieldOfView(),WINDOW_WIDTH,WINDOW_HEIGHT,0.1,10000));
 	WorldTrans=TrackballTrans;
 	WorldProj=PersProj*CameraTrans*WorldTrans;
+
 	glUniformMatrix4fv(gWVPLocation,1,GL_TRUE,&WorldProj.m[0][0]);
 	glUniformMatrix4fv(gWorldLocation,1,GL_TRUE,&WorldTrans.m[0][0]);
 	glUniform1i(LigandFlagLocation,0);
@@ -112,6 +117,11 @@ static void onKeyPress(unsigned char key, int x, int y)
 		case 'A':	lights.ToggleDirectionalLightSwitch();break;
 		case 'z':
 		case 'Z':	lights.TogglePositionalLightSwitch();break;
+
+		case 'c':
+		case 'C':	ChainColorFlag=!ChainColorFlag;break;
+		case 'e':
+		case 'E': 	ExplodeFlag=!ExplodeFlag;break;
 		default:glUniform1i(LigandFlagLocation,0); 
 				exit(1);
 	}

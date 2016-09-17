@@ -28,6 +28,9 @@ uniform DirectionalLight gDirectionalLight;
 uniform PositionalLight  gPositionalLight;
 uniform float gSpecularIntensity, gSpecularPower;
 uniform vec3 gEyeWorldPosition;
+uniform int gChainColorFlag;
+uniform int gLigandFlag;
+uniform vec3 gChainColor;
 in vec3 Normal0;
 in vec3 WorldPos0;
 
@@ -98,5 +101,11 @@ vec4  CalculatePositionalLight()
 void main()
 {
 	vec4 TotalLight=CalculateDirectionalLight()+CalculatePositionalLight();
-    FragColor = vec4(Color0, 1.0)*TotalLight;
+	if(gChainColorFlag)
+		if(gLigandFlag)
+			FragColor = vec4(Color0, 1.0)*TotalLight;	
+		else
+			FragColor = vec4(gChainColor,1.0)*TotalLight;
+	else
+    	FragColor = vec4(Color0, 1.0)*TotalLight;
 }

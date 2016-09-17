@@ -6,6 +6,8 @@ layout (location = 2) in vec3 Color;
 
 uniform mat4 gWorld,gWVP,gLigandTrans;
 uniform int gLigandFlag;
+uniform int gExplodeFlag;
+uniform mat4 gExplodeTranslate;
 
 
 out vec3 Normal0;
@@ -22,9 +24,18 @@ void main()
 	}    	
     else
     {
-    	gl_Position=gWVP*vec4(Position,1.0);
-    	Normal0 = (transpose(inverse(gWorld)) * vec4(Normal, 0.0)).xyz;
-    	WorldPos0 = (transpose(inverse(gWorld))* vec4(Position, 0.0)).xyz;
+        if(gExplodeFlag)
+        {
+            gl_Position=gWVP*gExplodeTranslate*vec4(Position,1.0);
+            Normal0 = (transpose(inverse(gWorld)) * vec4(Normal, 0.0)).xyz;
+            WorldPos0 = (transpose(inverse(gWorld))* vec4(Position, 0.0)).xyz;
+        }
+        else
+        {
+    	   gl_Position=gWVP*vec4(Position,1.0);
+    	   Normal0 = (transpose(inverse(gWorld)) * vec4(Normal, 0.0)).xyz;
+    	   WorldPos0 = (transpose(inverse(gWorld))* vec4(Position, 0.0)).xyz;
+        }
     }
     Color0=Color;
     
