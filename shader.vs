@@ -8,7 +8,7 @@ uniform mat4 gWorld,gWVP,gLigandTrans;
 uniform int gLigandFlag;
 uniform int gExplodeFlag;
 uniform mat4 gExplodeTranslate;
-uniform int gEdgeFlag;
+
 
 
 out vec3 Normal0;
@@ -39,9 +39,6 @@ void main()
         }
     }
     Color0=Color;
-    if(gEdgeFlag)
-    {
-        Color0=vec3(1.0,1.0,1.0);
-    }
+ 
     
 }

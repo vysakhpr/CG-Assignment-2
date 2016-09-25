@@ -19,8 +19,8 @@ const char* pGSFileName = "shader.gs";
 
 
 
-#include "file_utils.h"
-#include "math_utils.h"
+#include "include/file_utils.h"
+#include "include/math_utils.h"
 struct BoundBox
 {
 	Vector3f Center;
@@ -42,12 +42,12 @@ struct BoundBox
 }WorldBoundBox;
 
 
-#include "shader.h"
-#include "lighting.h"
-#include "helper.h"
+#include "include/shader.h"
+#include "include/lighting.h"
+#include "include/helper.h"
 
-#include "buffer.h"
-#include "display_callbacks.h"
+#include "include/buffer.h"
+#include "include/display_callbacks.h"
 
 
 static void InitializeDisplayCallbacks()

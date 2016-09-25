@@ -30,6 +30,8 @@ uniform float gSpecularIntensity, gSpecularPower;
 uniform vec3 gEyeWorldPosition;
 uniform int gChainColorFlag;
 uniform int gLigandFlag;
+uniform int gEdgeFlag;
+
 uniform vec3 gChainColor;
 in vec3 Normal0;
 in vec3 WorldPos0;
@@ -108,4 +110,9 @@ void main()
 			FragColor = vec4(gChainColor,1.0)*TotalLight;
 	else
     	FragColor = vec4(Color0, 1.0)*TotalLight;
+
+    if(gEdgeFlag)
+    {
+        FragColor= vec4(1.0,1.0,1.0,1.0)*TotalLight;
+    }
 }
