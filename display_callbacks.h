@@ -124,6 +124,10 @@ static void onKeyPress(unsigned char key, int x, int y)
 		case 'V': 	protein.ToggleColoring();
 		case 'e':
 		case 'E': 	ExplodeFlag=!ExplodeFlag;break;
+		case 'x':
+		case 'X':	protein.ToggleChainEdge();break;
+		case 's':
+		case 'S':	protein.ToggleAminoEdge();break;
 		default:glUniform1i(LigandFlagLocation,0); 
 				exit(1);
 	}

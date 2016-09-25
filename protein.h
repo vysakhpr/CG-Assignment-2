@@ -5,16 +5,33 @@
 #include "helper.h"
 #include "patch.h"
 
+typedef struct Ed{
+	int chainID;
+	bool f;
+
+	Ed()
+	{
+		chainID=0;
+		f=false;
+	}
+}edge;
+
+
 class ProteinMolecule
 {	
 public:
-	GLuint VBO,IBO,VAO,CHAIN_CBO,AMINO_CBO,CBO;
+	GLuint VBO,IBO,VAO,CBO,EBO,ABO;
 	BoundBox boundBox;
 	OffModel *protein;
 	Vector3f *Colors;
 	Patch *patches,*aminos;
+	//Edge *EdgeIndices;
+	edge* EdgeFlags;
+	edge* AminoEdgeFlags;	
+
+	int numEdges,numAminoEdge;
 	int patchno,amino_no;
-	bool active_amino;
+	bool active_amino,active_amino_edge,active_chain_edge;
 	ProteinMolecule()
 	{
 		
@@ -23,6 +40,16 @@ public:
 	void ToggleColoring()
 	{
 		active_amino=!active_amino;
+	}
+
+	void ToggleChainEdge()
+	{
+		active_chain_edge=!active_chain_edge;
+	}
+
+	void ToggleAminoEdge()
+	{
+		active_amino_edge=!active_amino_edge;
 	}
 
 	void LoadBuffers(char* OffFile)
@@ -36,6 +63,8 @@ public:
 		protein=readOffFile(OffFile);
 		Colors=new Vector3f[protein->numberOfVertices];
 		active_amino=false;
+		active_chain_edge=false;
+		active_amino_edge=false;
 
 		for (i = 0; i < protein->numberOfVertices; i++)
 	 	{
@@ -98,13 +127,65 @@ public:
 	 		(protein->vertices[i]).z-=boundBox.Center.z;
 	 	}
 	
-		int* Indices = NULL,*EdgeIndices=NULL;
+		int* Indices = NULL,*EIndices=NULL,*aminoEIndices=NULL;
+		edge* EdgeFlags=new edge[protein->numberOfVertices];	
+		edge* AminoEdgeFlags=new edge[protein->numberOfVertices];	
+
+		for (int i = 0; i < protein->numberOfVertices; ++i)
+		{
+			EdgeFlags[i].f=false;
+			AminoEdgeFlags[i].f=false;
+		}
+
+
+		for (int i = 0; i < protein->numberOfTriangles; ++i)
+			{
+				for(int j=0;j<3;j++)
+				{
+					if(!(EdgeFlags[protein->triangles[i].v[j]].f))
+					{
+						if(EdgeFlags[protein->triangles[i].v[j]].chainID==0){
+							EdgeFlags[protein->triangles[i].v[j]].chainID=protein->triangles[i].chainID;
+						}
+						else
+						{
+							if(EdgeFlags[protein->triangles[i].v[j]].chainID!=protein->triangles[i].chainID)
+							{
+								EdgeFlags[protein->triangles[i].v[j]].f=true;
+							}
+						}
+					}
+
+				if(!(AminoEdgeFlags[protein->triangles[i].v[j]].f))
+					{
+						if(AminoEdgeFlags[protein->triangles[i].v[j]].chainID==0){
+							AminoEdgeFlags[protein->triangles[i].v[j]].chainID=protein->triangles[i].aminoType;
+						}
+						else
+						{
+							if(AminoEdgeFlags[protein->triangles[i].v[j]].chainID!=protein->triangles[i].aminoType)
+							{
+								AminoEdgeFlags[protein->triangles[i].v[j]].f=true;
+							}
+						}
+					}
+				}
+			}
+
+
+
+		//Edge *EdgeIndices=NULL;
 		Indices=new int[protein->numberOfTriangles*3];
-		EdgeIndices=new int[protein->numberOfTriangles*3];
+		//EdgeIndices=new Edge[protein->numberOfTriangles*4];
+
+		EIndices=new int[protein->numberOfTriangles*4];
+		aminoEIndices=new int[protein->numberOfTriangles*4];
 		if (Indices==NULL){
 			cout << "Error: Memory couldnot be allocated"<< endl;
 	 		exit(1);
 		}
+		numEdges=0;
+		numAminoEdge=0;
 		for (i=0,j=0;i < protein->numberOfTriangles; i++,j+=3)
 		{
 			if((protein->triangles[i]).chainID>patchno)
@@ -135,7 +216,27 @@ public:
 	 		(protein->vertices[Indices[j]]).Normal+=Normal*Area*ToDegree(acos(v10.Dot(v20)));
 	 		(protein->vertices[Indices[j+1]]).Normal+=Normal*Area*ToDegree(acos((v10*-1.0).Dot(v21)));
 	 		(protein->vertices[Indices[j+2]]).Normal+=Normal*Area*ToDegree(acos((v20*-1.0).Dot((v21*-1.0))));
+
+	 		
+			for (int k = 0; k < 3; ++k)
+			{
+				if((EdgeFlags[protein->triangles[i].v[k]].f)&&(EdgeFlags[protein->triangles[i].v[(k+1)%3]].f))
+				{
+					EIndices[numEdges++]=protein->triangles[i].v[k];
+					EIndices[numEdges++]=protein->triangles[i].v[(k+1)%3];
+				}
+
+				if((AminoEdgeFlags[protein->triangles[i].v[k]].f)&&(AminoEdgeFlags[protein->triangles[i].v[(k+1)%3]].f))
+				{
+					aminoEIndices[numAminoEdge++]=protein->triangles[i].v[k];
+					aminoEIndices[numAminoEdge++]=protein->triangles[i].v[(k+1)%3];
+				}
+
+			}
+
 		}
+		
+
 
 		for (i = 0; i < protein->numberOfVertices; i++)
 		{
@@ -145,7 +246,7 @@ public:
 
 		patches=new Patch[patchno];
 		aminos=new Patch[(amino_no)];
-		cout<<amino_no<<endl;
+		//cout<<amino_no<<endl;
 
 		for(i=0;i<patchno;i++)
 		{
@@ -199,18 +300,20 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER,CBO);
 		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(protein->numberOfVertices), Colors, GL_STATIC_DRAW);
 	
+		glGenBuffers(1,&EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*(numEdges), EIndices , GL_STATIC_DRAW);
 
-		glGenBuffers(1,&CHAIN_CBO);
-		glBindBuffer(GL_ARRAY_BUFFER,CHAIN_CBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(protein->numberOfVertices), Colors, GL_STATIC_DRAW);
+		glGenBuffers(1,&ABO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ABO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*(numAminoEdge), aminoEIndices , GL_STATIC_DRAW);
+
+		
 	
 		for (i = 0; i < protein->numberOfVertices; i++)
 		{
 			Colors[i]=Vector3f(0.0,1.0,0.0);
 		}		
-		glGenBuffers(1,&AMINO_CBO);
-		glBindBuffer(GL_ARRAY_BUFFER,AMINO_CBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(protein->numberOfVertices), Colors, GL_STATIC_DRAW);
 
 
 		//glEnableVertexAttribArray(0);
@@ -228,6 +331,7 @@ public:
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)(sizeof(float)*3));
 		glBindBuffer(GL_ARRAY_BUFFER, CBO);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), 0);
+
 		//glDisableVertexAttribArray(1);
 		//glDisableVertexAttribArray(0);
 
@@ -241,9 +345,30 @@ public:
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
 		glBindVertexArray(VAO);
+		
+	//glDrawElements(GL_TRIANGLES,protein->numberOfTriangles*3,GL_UNSIGNED_INT,0);
+		if(active_chain_edge)
+		{
+			glUniform1i(EdgeFlagLocation,1);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+			glBindBuffer(GL_ARRAY_BUFFER,VBO);
+			glLineWidth(10);
+			glDrawElements(GL_LINES,numEdges,GL_UNSIGNED_INT,0);
+			glUniform1i(EdgeFlagLocation,0);
+		}
+
+		if(active_amino_edge)
+		{
+			glUniform1i(EdgeFlagLocation,1);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ABO);
+			glBindBuffer(GL_ARRAY_BUFFER,VBO);
+			glLineWidth(3);
+			glDrawElements(GL_LINES,numAminoEdge,GL_UNSIGNED_INT,0);
+			glUniform1i(EdgeFlagLocation,0);
+		}
+		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 		glBindBuffer(GL_ARRAY_BUFFER,VBO);
-	//glDrawElements(GL_TRIANGLES,protein->numberOfTriangles*3,GL_UNSIGNED_INT,0);
 		if(active_amino)
 		{
 			for (int i = 0; i < amino_no; ++i)
@@ -272,12 +397,12 @@ public:
 				patches[i].RenderPatch();
 			}
 		}
-
+		
 		glBindVertexArray(0);
 		glDisableVertexAttribArray(2);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(0);
-	
+		
 	}
 
 

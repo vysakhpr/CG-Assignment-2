@@ -49,11 +49,74 @@ public:
 
 	void LoadBuffers(char* crdFile)
 	{
+		float maxBoundX=0,maxBoundY=0,maxBoundZ=0,minBoundX=0,minBoundY=0,minBoundZ=0;
+		float x,y,z;
+		float dX,dY,dZ,BoundBoxWidth;
 		int i;
 		int slices,stacks;
 		slices=80;
 		stacks=80;
 		ligand=readCrdFile(crdFile);	
+
+
+		for (i = 0; i < ligand->numAtoms; i++)
+	 	{
+	 		x=(ligand->atoms[i]).x;
+	 		y=(ligand->atoms[i]).y;
+	 		z=(ligand->atoms[i]).z;
+	 		if(i==0)
+	 		{
+		 		maxBoundX=x;maxBoundY=y;maxBoundZ=z;
+		 		minBoundX=x;minBoundY=y;minBoundZ=z;
+		 	}
+	 		else
+	 		{
+		 		if(x>maxBoundX)
+		 			maxBoundX=x;
+	 			else if(x<minBoundX)
+	 				minBoundX=x;
+
+	 			if(y>maxBoundY)
+	 				maxBoundY=y;
+	 			else if(y<minBoundY)
+		 			minBoundY=y;
+
+	 			if(z>maxBoundZ)
+		 			maxBoundZ=z;
+		 		else if(z<minBoundZ)
+	 				minBoundZ=z; 
+	 		}
+	 	}
+		dX=maxBoundX- minBoundX;
+		dY=maxBoundY- minBoundY;
+		dZ=maxBoundZ- minBoundZ;
+		
+		if(dX>dY)
+		{
+			if(dX>dZ)
+				BoundBoxWidth=dX;
+			else
+				BoundBoxWidth=dZ;
+		}
+		else
+		{
+			if(dY>dZ)
+				BoundBoxWidth=dY;
+			else
+				BoundBoxWidth=dZ;
+		}
+		if(BoundBoxWidth==0)
+			BoundBoxWidth=1;
+		boundBox.Center.x=(maxBoundX-(dX/2));
+		boundBox.Center.y=(maxBoundY-(dY/2));
+		boundBox.Center.z=(maxBoundZ-(dZ/2));
+		boundBox.XWidth=dX;
+		boundBox.YWidth=dY;
+		boundBox.ZWidth=dZ;
+
+		
+
+
 
 		TranslateVectorToProtein=Vector3f((ligand->destCoords[0])-(ligand->srcCoords[0]),(ligand->destCoords[1]-ligand->srcCoords[1]),(ligand->destCoords[2]-ligand->srcCoords[2]));
 		TotalSphereVertex=ligand->numAtoms*(slices * (stacks-1) + 2);
@@ -149,6 +212,9 @@ public:
 			UnitCylinder(slices,stacks);
 
 
+
+
+
 			for (i = 0; i < numCylinVerts; i+=2)
 			{
 				cylinVerts[i].x+=atom1.x;
@@ -157,6 +223,7 @@ public:
 				cylinVerts[i+1].x+=atom2.x;
 				cylinVerts[i+1].y+=atom2.y;
 				cylinVerts[i+1].z+=atom2.z-1;
+				//cylinVerts[i+1].z+=atom2.z;
 				
 			}
 
@@ -252,6 +319,7 @@ public:
 		Up.Normalize();
 		Origin=Origin- TranslateVectorToProtein;
 		cam.SetOrientation(Target*-1,Up);
+		//cam.SetOrientation(TranslateVectorToProtein*-1,Up);
 		cam.SetPosition(Origin);
 		glUniform1i(LigandFlagLocation,1);
 		glUniformMatrix4fv(LigandTransLocation,1,GL_TRUE,&LigandTrans.m[0][0]);
@@ -466,6 +534,7 @@ public:
 		count++;
 	}
 
+	
 };
 
 #endif

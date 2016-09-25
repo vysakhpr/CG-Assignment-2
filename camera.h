@@ -117,6 +117,7 @@ public:
 	Matrix4f RenderMatrix()
 	{
 		Matrix4f CameraTranslateTrans,CameraTrans;
+		//CameraTranslateTrans.InitTranslationTransform(-1*Position.x,-1*Position.y,-1*Position.z);
 		CameraTranslateTrans.InitTranslationTransform(-1*Position.x,-1*Position.y,-1*Position.z);
 
 		CheckEdges();

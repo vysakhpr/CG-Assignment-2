@@ -11,6 +11,7 @@ GLuint PLightAttenuationConstantLocation,PLightAttenuationLinearLocation,PLightA
 GLuint LigandFlagLocation, LigandTransLocation;
 GLuint ChainColorFlagLocation,ChainColorLocation;
 GLuint ExplodeFlagLocation,ExplodeTranslateLocation;
+GLuint EdgeFlagLocation;
 
 static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType) {
 	GLuint ShaderObj = glCreateShader(ShaderType);
@@ -110,6 +111,7 @@ static void CompileShaders() {
 	ChainColorLocation=glGetUniformLocation(ShaderProgram,"gChainColor");
 	ExplodeFlagLocation=glGetUniformLocation(ShaderProgram,"gExplodeFlag");
 	ExplodeTranslateLocation=glGetUniformLocation(ShaderProgram,"gExplodeTranslate");
+	EdgeFlagLocation =glGetUniformLocation(ShaderProgram,"gEdgeFlag");
 	if(	gWVPLocation==0xFFFFFFFF || gWorldLocation==0xFFFFFFFF || DLightColorLocation==0xFFFFFFFF ||
 		DLightAmbientIntensityLocation==0xFFFFFFFF || DLightDirectionLocation == 0xFFFFFFFF ||
 		DLightDiffuseIntensityLocation == 0xFFFFFFFF || gEyeWorldPositionLocation == 0xFFFFFFFF ||
@@ -118,7 +120,7 @@ static void CompileShaders() {
 		 == 0xFFFFFFFF || PLightAttenuationConstantLocation == 0xFFFFFFFF || PLightAttenuationLinearLocation == 0xFFFFFFFF || 
 		 PLightAttenuationExpLocation == 0xFFFFFFFF || LigandTransLocation == 0xFFFFFFFF || LigandFlagLocation == 0xFFFFFFFF || 
 		 ChainColorFlagLocation == 0xFFFFFFFF || ChainColorLocation == 0xFFFFFFFF || ExplodeFlagLocation == 0xFFFFFFFF  ||
-		 ExplodeTranslateLocation == 0xFFFFFFFF )
+		 ExplodeTranslateLocation == 0xFFFFFFFF || EdgeFlagLocation == 0xFFFFFFFF )
 	{
 		cout<<"Location Cannot be found"<<endl;
 		exit(1);
@@ -126,6 +128,7 @@ static void CompileShaders() {
 	glUniform1i(LigandFlagLocation,0);
 	glUniform1i(ChainColorFlagLocation,0);
 	glUniform1i(ExplodeFlagLocation,0);
+	glUniform1i(EdgeFlagLocation,0);
 }
 
 

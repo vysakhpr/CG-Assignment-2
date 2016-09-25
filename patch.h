@@ -82,7 +82,21 @@ public:
 		}
 	}
 
-
+	bool IsEdgeInPatch(int u,int v)
+	{
+		for (int i = 0; i < numIndex-1; i+=3)
+		{
+			for (int j = 0; j < 3; ++j)
+			{
+				if(Indices[i+j]==u)
+				{
+					if(Indices[i+((j+1)%3)]==v)
+						return true;
+				}
+			}
+		}
+		return false;
+	}
 };
 
 #endif
